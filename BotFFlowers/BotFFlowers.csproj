@@ -6,4 +6,16 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="Deployf.Botf" />
+    <None Remove="AngleSharp" />
+    <None Remove="HtmlAgilityPack" />
+    <None Remove="Telegram.Bot" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Deployf.Botf" Version="0.5.1" />
+    <PackageReference Include="AngleSharp" Version="0.9.9" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.42" />
+    <PackageReference Include="Telegram.Bot" Version="17.0.0" />
+  </ItemGroup>
 </Project>
