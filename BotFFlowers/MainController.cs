@@ -18,6 +18,10 @@ namespace BotFFlowers
 		List<string> prices = new List<string>();
 		List<string> titles = new List<string>();
 		List<string> urls = new List<string>();
+
+		List<Item> shop_cart = new List<Item>();
+		
+
 		string baseurl = "https://flowerskamensk.ru/products/category/";
 		string header_tulps = "tulpany";
 		string header_roses = "rossiyskie-rozy";
@@ -35,7 +39,8 @@ namespace BotFFlowers
 		[Action("/start", "Главное меню")]
 		public void Start()
         {
-			PushL("🌷 <b>Городские цветы Каменск-Шахтинский</b> \n🟢 Самые свежие цветы и букеты! \n🟢 Более 8 лет опыта и репутации! \n🟢 Наш <i>telegram</i> канал: <a href='https://t.me/gorodskie_cveti_kamensk'>Городские Цветы Каменск</a>");
+			
+			PushL($"✋ <b>Привет, {Context.GetUserFullName()}!</b>\n🌷 <b>Городские цветы Каменск-Шахтинский</b> \n🟢 Самые свежие цветы и букеты! \n🟢 Более 8 лет опыта и репутации! \n🟢 Наш <i>telegram</i> канал: <a href='https://t.me/gorodskie_cveti_kamensk'>Городские Цветы Каменск</a>");
 			RowButton("🌷 1. Тюльпаны", Q(PressTulps));
 			RowButton("🌹 2. Российские Розы", Q(PressRURoses));
 			RowButton("🌸 3. Цветы в коробках", Q(PressBoxes));
@@ -50,16 +55,15 @@ namespace BotFFlowers
 			RowButton("⭐ Наши оценки", Q(PressRate));
 			RowButton("🛒 Корзина", Q(PressMainBasket));
 			Button("🚚 Доставка", Q(PressDelivery));
-			Button("📱 Контакты", Q(PressButton));
+			Button("📱 Контакты", Q(PressContact));
 
 
 			
 			
 		}
-
-
+		
 		[Action]
-		public void PressButton()
+		public void PressContact()
         {
 
 			Bot.SendPhotoAsync(ChatId, "https://i.siteapi.org/jZcycCnxSz_otO-zGfPlcmFy0nc=/fit-in/330x/top/s.siteapi.org/ac20a296e8e485f.ru/img/at32995njz4ksckckw88gkg0gcosgs", "📱 <b>Контакты</b>\n📍 <b>Адрес:</b>\n пр.Карла Маркса, 54г.Каменск-Шахтинский\n(Режим работы: Круглосуточно)\n📍 <b>Адрес:</b>\n пр.Карла Маркса, 79, Каменск-Шахтинский\n(Режим работы: 7:00-20:00)\n📞 <b>Телефоны:</b>\n +7-928-180-63-88\n +7-918-576-10-88\n📧 <b>E-mail:</b>\n flowerskamensk@mail.ru\n🌐 <b>Сайт:</b>\n https://flowerskamensk.ru/\n📲 <b>Whatsapp:</b>\n +7-928-180-63-88\n🕰 <b>Прием заказов:</b>\n с 8:00-22:00", Telegram.Bot.Types.Enums.ParseMode.Html);
@@ -67,7 +71,7 @@ namespace BotFFlowers
 		}
 
 		//Buttons Categories
-		string stdr = "123";
+		
 		//Тюльпаны
 		[Action]
 		public void PressTulps()
@@ -198,29 +202,26 @@ namespace BotFFlowers
 		}
 		//Корзина
 		[Action]
-		public void PressMainBasket()
+		public async void PressMainBasket()
 		{
-			PushL("<b>Корзина:</b>");
-			RowButton("⏪ Назад", Q(Start));
 
+			foreach(var item in shop_cart)
+            {
+				await Bot.SendTextMessageAsync(ChatId, $"Наименование: {item.Name} Цена:{item.Price}", Telegram.Bot.Types.Enums.ParseMode.Html);
+			}
 			
+
 		}
 		//Стоимость доставки
 		[Action]
 		public void PressDelivery()
 		{
-			//SendPhoto();
+			
 			Bot.SendPhotoAsync(ChatId, "https://i.siteapi.org/7EEvg7hzsPJrNpOqfsoyA6C4D8E=/0x44:618x824/ac20a296e8e485f.ru.s.siteapi.org/img/6920e1k6n5kw4gwgcgwkgs0g4gwooo", "🚚 <b>Стоимость доставки</b>\n<b>Самовывоз</b> - 0 ₽\n<b>Каменск - Шахтинский(центр и мкр.60 лет Октября)</b> - 150 ₽\n<b>Комбинат(район)</b> - 200 ₽\n<b>Старая Станица(район)</b> - 300 ₽\n<b>Шахтёрский(район)</b> - 200 ₽\n<b>Южный(район)</b> - 250 ₽\n<b>Абрамовка(посёлок)</b> - 300 ₽\n<b>Астахов(хутор)</b> - 550 ₽\n<b>Богданов(хутор)</b> - 550 ₽\n<b>Вишневецкий</b> - 800 ₽\n<b>Волченский(хутор)</b> - 500 ₽\n<b>Глубокий(посёлок)</b> - 650 ₽\n<b>Данилов(хутор)</b> - 1200 ₽\n<b>Донецк РФ</b> - 900 ₽\n<b>Диченский(хутор)</b> - 400 ₽\n<b>Заводской(микрорайон)</b> - 450 ₽\n<b>Калитвенская(станица)</b> - 500 ₽\n<b>Красновка(хутор)</b> - 350 ₽\n<b>Леcной(посёлок)</b> - 300 ₽\n<b>Лиховской(Лихая)</b> - 600 ₽\n<b>Лихая(за переездом)</b> - 700 ₽\n<b>Лихой(хутор)</b> - 800 ₽\n<b>Малая Каменка(хутор)</b> - 400 ₽\n<b>Масаловка(хутор)</b> - 550 ₽\n<b>Нижнеговейный(хутор)</b> - 300 ₽\n<b>Углеродовский</b> - 850 ₽\n<b>Филлипенков(хутор)</b> - 400 ₽\n<b>Чистоозерный(посёлок)</b> - 550 ₽\n<b>Шахта 17</b> - 500 ₽", Telegram.Bot.Types.Enums.ParseMode.Html);
-			//PushL("Самовывоз: 0 рублей\nКаменск-Шахтинский (центр и мкр.60 лет Октября): 150 рублей\n'Комбинат'(район): 200 рублей\n Старая Станица(район): 300 рублей\nШахтерский(район): 200 рублей");
+			
 			Send();
 		}
-		//Контакты
-		[Action]
-		public void PressContacts()
-		{
-			Bot.SendPhotoAsync(ChatId, "https://i.siteapi.org/7EEvg7hzsPJrNpOqfsoyA6C4D8E=/0x44:618x824/ac20a296e8e485f.ru.s.siteapi.org/img/6920e1k6n5kw4gwgcgwkgs0g4gwooo", "📱 <b>Контакты</b>\n📍 <b>Адрес:</b>\n пр.Карла Маркса, 54г.Каменск-Шахтинский\n(Режим работы: Круглосуточно)\n📍 <b>Адрес:</b>\n пр.Карла Маркса, 79, Каменск-Шахтинский\n(Режим работы: 7:00-20:00)\n📞 <b>Телефоны:</b>\n +7-928-180-63-88\n +7-918-576-10-88\n📧 <b>E-mail:</b>\n flowerskamensk@mail.ru\n🌐 <b>Сайт:</b>\n https://flowerskamensk.ru/\n📲 <b>Whatsapp:</b>\n +7-928-180-63-88\n🕰 <b>Прием заказов:</b>\n с 8:00-22:00", Telegram.Bot.Types.Enums.ParseMode.Html);
-			Send();
-		}
+		
 		//Рейтинги
 		[Action]
 		public void PressRate()
@@ -236,21 +237,47 @@ namespace BotFFlowers
         }
 
 		//Постинг зона
-		
-
 
 		
 
+		[Action]
+		public async void CallData(string item_name,string _price)
+        {
 
-		///Отправка фото
+			shop_cart.Add(new Item(item_name,_price));
+			await Bot.SendTextMessageAsync(ChatId, $"✅ Товар {item_name} добавлен в корзину!", Telegram.Bot.Types.Enums.ParseMode.Html);
+            
+        }
+
+		
+
 		public void SendPhoto(string _imgurl,string  _itemname, string _price)
 		{
+
+			InlineKeyboardMarkup inlineKeyboard = new(
+
+			new[]
+			{
+				InlineKeyboardButton.WithCallbackData(text: "🛒 В корзину", callbackData: Q(CallData,$"{_itemname}",_price)),
+
+			}
+
+		);
 
 			Bot.SendPhotoAsync(ChatId,_imgurl,$"<b>{_itemname}</b>\n\nЦена: {_price}\n\n🚚 Доставка или самовывоз", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: inlineKeyboard);
 
 			
 
+
 		}
+		
+
+		//Маркап
+
+
+		
+			
+			
 		//Сортировка и постинг
 		[Action]
 		public void PushItem(string _header, int from_price, int to_price)
@@ -268,32 +295,13 @@ namespace BotFFlowers
 
 			}
 		}
-		//Кнопка заказа
-
-
-
-
-			InlineKeyboardMarkup inlineKeyboard = new(
-
-			new []
-			{
-				InlineKeyboardButton.WithCallbackData(text: "🛒 В корзину", callbackData: "123"),
-
-			}
-
-		);
 		
-		
-			//Callback
+		//Callback
 
-			//Парсинг
-			public void ParseItem(string _baseurl)
-		{
-
-			
-			
+		//Парсинг
+		public void ParseItem(string _baseurl)
+		{		
 			HtmlDocument HD = new HtmlDocument();
-
 			var web = new HtmlWeb
 			{
 				AutoDetectEncoding = false,
