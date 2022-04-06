@@ -204,14 +204,59 @@ namespace BotFFlowers
 		[Action]
 		public async void PressMainBasket()
 		{
+			InlineKeyboardMarkup delete_cart = new(
 
-			foreach(var item in shop_cart)
-            {
-				await Client.SendTextMessageAsync(ChatId, $"Наименование: {item.Name} Цена:{item.Price}", Telegram.Bot.Types.Enums.ParseMode.Html);
+			new[]
+			{
+				InlineKeyboardButton.WithCallbackData(text: "❌ Удалить товар", callbackData: Q(CartDeleteCallData)),
+
 			}
+
+		);
+
+			InlineKeyboardMarkup create_order = new(
+
+			new[]
+			{
+				InlineKeyboardButton.WithCallbackData(text: "❌ Очистить корзину", callbackData: Q(CartDeleteCallData)),
+				InlineKeyboardButton.WithCallbackData(text: "✅ Оформить заказ", callbackData: Q(CartDeleteCallData)),
+
+			}
+
+		);
+
+
+
+			//PushL("🛒 <b>Корзина:</b>\n");
+			await Client.SendTextMessageAsync(ChatId, "🛒 <b>Корзина:</b>\n", Telegram.Bot.Types.Enums.ParseMode.Html);
+		
+			List<int> total_list = new List<int>();
+			int total = 0;
+			foreach (var item in shop_cart)
+            {
+				await Client.SendTextMessageAsync(ChatId, $"⭐ {item.Name} : {item.Price}", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: delete_cart);
+				string check = new string(item.Price.Where(t => char.IsDigit(t)).ToArray());
+				int price = Convert.ToInt32(check);
+				total_list.Add(price);
+			};
+			foreach(var i in total_list)
+            {
+				total += i;
+            }
+			await Client.SendTextMessageAsync(ChatId,$"💰 Итоговая сумма заказа(Без учёта доставки): {total} ₽",Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: create_order);
+			
 			
 
+
+
 		}
+
+		[Action]
+		public async void CartDeleteCallData()
+        {
+			shop_cart.Clear();
+			await Client.SendTextMessageAsync(ChatId, "✅ Корзина очищена", Telegram.Bot.Types.Enums.ParseMode.Html);
+        }
 		//Стоимость доставки
 		[Action]
 		public void PressDelivery()
@@ -265,10 +310,6 @@ namespace BotFFlowers
 		);
 
 			Client.SendPhotoAsync(ChatId,_imgurl,$"<b>{_itemname}</b>\n\nЦена: {_price}\n\n🚚 Доставка или самовывоз", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: inlineKeyboard);
-
-			
-
-
 		}
 		
 
