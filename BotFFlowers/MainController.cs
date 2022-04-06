@@ -14,13 +14,15 @@ namespace BotFFlowers
 {
 	public class MainController : BotControllerBase
 	{
-		//private static TelegramBotClient Bot = new TelegramBotClient("5249074040:AAGjwQxQHo17Ut6ychH50QMHmgEwyndUbZo");
+		Random random = new Random();
+		private static TelegramBotClient BotGen = new TelegramBotClient("5249074040:AAGjwQxQHo17Ut6ychH50QMHmgEwyndUbZo");
+		private static TelegramBotClient Notif = new TelegramBotClient("5213399849:AAHa_-r0-xgtplHmaMro9m8jmQ88qe8Nk8w");
 		List<string> prices = new List<string>();
 		List<string> titles = new List<string>();
-		 List<string> urls = new List<string>();
+		List<string> urls = new List<string>();
 
 		public static List<Item> shop_cart = new List<Item>();
-		
+		public static Customer customer_info = new Customer();
 
 		string baseurl = "https://flowerskamensk.ru/products/category/";
 		string header_tulps = "tulpany";
@@ -63,10 +65,10 @@ namespace BotFFlowers
 		}
 		
 		[Action]
-		public void PressContact()
+		public async void PressContact()
         {
-
-			Client.SendPhotoAsync(ChatId, "https://i.siteapi.org/jZcycCnxSz_otO-zGfPlcmFy0nc=/fit-in/330x/top/s.siteapi.org/ac20a296e8e485f.ru/img/at32995njz4ksckckw88gkg0gcosgs", "📱 <b>Контакты</b>\n📍 <b>Адрес:</b>\n пр.Карла Маркса, 54г.Каменск-Шахтинский\n(Режим работы: Круглосуточно)\n📍 <b>Адрес:</b>\n пр.Карла Маркса, 79, Каменск-Шахтинский\n(Режим работы: 7:00-20:00)\n📞 <b>Телефоны:</b>\n +7-928-180-63-88\n +7-918-576-10-88\n📧 <b>E-mail:</b>\n flowerskamensk@mail.ru\n🌐 <b>Сайт:</b>\n https://flowerskamensk.ru/\n📲 <b>Whatsapp:</b>\n +7-928-180-63-88\n🕰 <b>Прием заказов:</b>\n с 8:00-22:00", Telegram.Bot.Types.Enums.ParseMode.Html);
+			
+			await Client.SendPhotoAsync(ChatId, "https://i.siteapi.org/jZcycCnxSz_otO-zGfPlcmFy0nc=/fit-in/330x/top/s.siteapi.org/ac20a296e8e485f.ru/img/at32995njz4ksckckw88gkg0gcosgs", "📱 <b>Контакты</b>\n📍 <b>Адрес:</b>\n пр.Карла Маркса, 54г.Каменск-Шахтинский\n(Режим работы: Круглосуточно)\n📍 <b>Адрес:</b>\n пр.Карла Маркса, 79, Каменск-Шахтинский\n(Режим работы: 7:00-20:00)\n📞 <b>Телефоны:</b>\n +7-928-180-63-88\n +7-918-576-10-88\n📧 <b>E-mail:</b>\n flowerskamensk@mail.ru\n🌐 <b>Сайт:</b>\n https://flowerskamensk.ru/\n📲 <b>Whatsapp:</b>\n +7-928-180-63-88\n🕰 <b>Прием заказов:</b>\n с 8:00-22:00", Telegram.Bot.Types.Enums.ParseMode.Html);
 			
 		}
 
@@ -99,7 +101,7 @@ namespace BotFFlowers
 			RowButton("🟩 От 1600 До 2500 рублей 🟩", Q(PushItem,header_roses,1600,2500));
 			RowButton("🟩 От 2500 До 3500 рублей 🟩", Q(PushItem,header_roses,2500,3500));
 			RowButton("🟩 От 3500 До 5000 рублей 🟩", Q(PushItem,header_roses,3500,5000));
-			RowButton("🟩 5000 рублей и выше 🟩", Q(PushItem,header_roses,5000,999999));
+			RowButton("🟩 5000 рублей и выше 🟩", Q(PushItem,header_roses,5000,50000));
 			
 		}
 
@@ -114,7 +116,7 @@ namespace BotFFlowers
 			RowButton("🟩 От 1600 До 2500 рублей 🟩", Q(PushItem,header_boxes,1600,2500));
 			RowButton("🟩 От 2500 До 3500 рублей 🟩", Q(PushItem,header_boxes,2500,3500));
 			RowButton("🟩 От 3500 До 5000 рублей 🟩", Q(PushItem,header_boxes,3500,5000));
-			RowButton("🟩 5000 рублей и выше 🟩", Q(PushItem,header_boxes,5000,999999));
+			RowButton("🟩 5000 рублей и выше 🟩", Q(PushItem,header_boxes,5000,50000));
 			
 		}
 
@@ -129,7 +131,7 @@ namespace BotFFlowers
 			RowButton("🟩 От 1500 До 2500 рублей 🟩", Q(PushItem,header_bouqets,1500,2500));
 			RowButton("🟩 От 2500 До 3500 рублей 🟩", Q(PushItem,header_bouqets,2500,3500));
 			RowButton("🟩 От 3500 До 5000 рублей 🟩", Q(PushItem,header_bouqets,3500,5000));
-			RowButton("🟩 5000 рублей и выше 🟩", Q(PushItem,header_bouqets,5000,999999));
+			RowButton("🟩 5000 рублей и выше 🟩", Q(PushItem,header_bouqets,5000,50000));
 			
 		}
 		//Корзины
@@ -141,7 +143,7 @@ namespace BotFFlowers
 			RowButton("🟩 До 2500 рублей 🟩", Q(PushItem,header_baskets,0,2500));
 			RowButton("🟩 От 2500 До 4000 рублей 🟩", Q(PushItem,header_baskets,2500,4000));
 			RowButton("🟩 От 4000 До 7000 рублей 🟩", Q(PushItem,header_baskets,4000,7000));
-			RowButton("🟩 7000 рублей и выше 🟩", Q(PushItem,header_baskets,7000,999999));
+			RowButton("🟩 7000 рублей и выше 🟩", Q(PushItem,header_baskets,7000,50000));
 			
 			
 		}
@@ -151,7 +153,7 @@ namespace BotFFlowers
 		{
 			PushL("<b>Категории:</b>");
 			RowButton("⏪ Назад", Q(Start));
-			RowButton("🧸 Показать товары", Q(PushItem,header_toys,0,999999999));
+			RowButton("🧸 Показать товары", Q(PushItem,header_toys,0,50000));
 			
 		}
 		//Воздушные шары
@@ -160,7 +162,7 @@ namespace BotFFlowers
 		{
 			PushL("<b>Категории:</b>");
 			RowButton("⏪ Назад", Q(Start));
-			RowButton("🎈 Показать товары", Q(PushItem,header_baloons,0,9999999));
+			RowButton("🎈 Показать товары", Q(PushItem,header_baloons,0,50000));
 			
 		}
 		//Конфеты
@@ -169,7 +171,7 @@ namespace BotFFlowers
 		{
 			PushL("<b>Категории:</b>");
 			RowButton("⏪ Назад", Q(Start));
-			RowButton("🍬 Показать товары", Q(PushItem,header_candy,0,9999999));
+			RowButton("🍬 Показать товары", Q(PushItem,header_candy,0,50000));
 			
 		}
 		[Action]
@@ -178,7 +180,7 @@ namespace BotFFlowers
         {
 			PushL("<b>Категории:</b>");
 			RowButton("⏪ Назад", Q(Start));
-			RowButton("🎂 Показать товары", Q(PushItem,header_cakes,0,999999999));
+			RowButton("🎂 Показать товары", Q(PushItem,header_cakes,0,50000));
 
 			
 		}
@@ -188,7 +190,7 @@ namespace BotFFlowers
 		{
 			PushL("<b>Категории:</b>");
 			RowButton("⏪ Назад", Q(Start));
-			RowButton("🍏 Показать товары", Q(PushItem,header_fruits,0,999999999));
+			RowButton("🍏 Показать товары", Q(PushItem,header_fruits,0,50000));
 
 		}
 		//Открытки
@@ -197,18 +199,46 @@ namespace BotFFlowers
 		{
 			PushL("<b>Категории:</b>");
 			RowButton("⏪ Назад", Q(Start));
-			RowButton("🗾 Показать товары", Q(PushItem,header_postcards,0,99999999));
+			RowButton("🗾 Показать товары", Q(PushItem,header_postcards,0,50000));
 
 		}
+		//Стоимость доставки
+		[Action]
+		public async void PressDelivery()
+		{
+		//	PushL("🚚 <b>Стоимость доставки</b>\n<b>Самовывоз</b> - 0 ₽\n<b>Каменск - Шахтинский(центр и мкр.60 лет Октября)</b> - 150 ₽\n<b>Комбинат(район)</b> - 200 ₽\n<b>Старая Станица(район)</b> - 300 ₽\n<b>Шахтёрский(район)</b> - 200 ₽\n<b>Южный(район)</b> - 250 ₽\n<b>Абрамовка(посёлок)</b> - 300 ₽\n<b>Астахов(хутор)</b> - 550 ₽\n<b>Богданов(хутор)</b> - 550 ₽\n<b>Вишневецкий</b> - 800 ₽\n<b>Волченский(хутор)</b> - 500 ₽\n<b>Глубокий(посёлок)</b> - 650 ₽\n<b>Данилов(хутор)</b> - 1200 ₽\n<b>Донецк РФ</b> - 900 ₽\n<b>Диченский(хутор)</b> - 400 ₽\n<b>Заводской(микрорайон)</b> - 450 ₽\n<b>Калитвенская(станица)</b> - 500 ₽\n<b>Красновка(хутор)</b> - 350 ₽\n<b>Леcной(посёлок)</b> - 300 ₽\n<b>Лиховской(Лихая)</b> - 600 ₽\n<b>Лихая(за переездом)</b> - 700 ₽\n<b>Лихой(хутор)</b> - 800 ₽\n<b>Малая Каменка(хутор)</b> - 400 ₽\n<b>Масаловка(хутор)</b> - 550 ₽\n<b>Нижнеговейный(хутор)</b> - 300 ₽\n<b>Углеродовский</b> - 850 ₽\n<b>Филлипенков(хутор)</b> - 400 ₽\n<b>Чистоозерный(посёлок)</b> - 550 ₽\n<b>Шахта 17</b> - 500 ₽");
+		//	RowButton("⏪ Назад", Q(Start));
+			await Client.SendPhotoAsync(ChatId, "https://i.siteapi.org/7EEvg7hzsPJrNpOqfsoyA6C4D8E=/0x44:618x824/ac20a296e8e485f.ru.s.siteapi.org/img/6920e1k6n5kw4gwgcgwkgs0g4gwooo", "🚚 <b>Стоимость доставки</b>\n<b>Самовывоз</b> - 0 ₽\n<b>Каменск - Шахтинский(центр и мкр.60 лет Октября)</b> - 150 ₽\n<b>Комбинат(район)</b> - 200 ₽\n<b>Старая Станица(район)</b> - 300 ₽\n<b>Шахтёрский(район)</b> - 200 ₽\n<b>Южный(район)</b> - 250 ₽\n<b>Абрамовка(посёлок)</b> - 300 ₽\n<b>Астахов(хутор)</b> - 550 ₽\n<b>Богданов(хутор)</b> - 550 ₽\n<b>Вишневецкий</b> - 800 ₽\n<b>Волченский(хутор)</b> - 500 ₽\n<b>Глубокий(посёлок)</b> - 650 ₽\n<b>Данилов(хутор)</b> - 1200 ₽\n<b>Донецк РФ</b> - 900 ₽\n<b>Диченский(хутор)</b> - 400 ₽\n<b>Заводской(микрорайон)</b> - 450 ₽\n<b>Калитвенская(станица)</b> - 500 ₽\n<b>Красновка(хутор)</b> - 350 ₽\n<b>Леcной(посёлок)</b> - 300 ₽\n<b>Лиховской(Лихая)</b> - 600 ₽\n<b>Лихая(за переездом)</b> - 700 ₽\n<b>Лихой(хутор)</b> - 800 ₽\n<b>Малая Каменка(хутор)</b> - 400 ₽\n<b>Масаловка(хутор)</b> - 550 ₽\n<b>Нижнеговейный(хутор)</b> - 300 ₽\n<b>Углеродовский</b> - 850 ₽\n<b>Филлипенков(хутор)</b> - 400 ₽\n<b>Чистоозерный(посёлок)</b> - 550 ₽\n<b>Шахта 17</b> - 500 ₽", Telegram.Bot.Types.Enums.ParseMode.Html);
+
+			
+		}
+
+		//Рейтинги
+		[Action]
+		public void PressRate()
+		{
+			PushL("<b>Наш рейтинг:</b>\n\n4.8 ⭐ (РЕЙТИНГ ЯНДЕКС)\n*на основе 42 официальных отзывов в сервисах данной поисковой службы\n\n4.74 ⭐ (РЕЙТИНГ GOOGLE)\n*на основе 57 официальных отзывов в сервисах данной поисковой службы");
+			RowButton("⏪ Назад", Q(Start));
+		}
+
+		//Исключение
+		[On(Handle.Unknown)]
+		public void Unknown()
+		{
+			PushL("Команда не распознана!");
+		}
+
 		//Корзина
 		[Action]
 		public async void PressMainBasket()
 		{
+			int id = 0;
+			
 			InlineKeyboardMarkup delete_cart = new(
 
 			new[]
 			{
-				InlineKeyboardButton.WithCallbackData(text: "❌ Удалить товар", callbackData: Q(CartDeleteCallData)),
+				InlineKeyboardButton.WithCallbackData(text: "❌ Удалить товар", callbackData: Q(DeleteAtId,id)),
 
 			}
 
@@ -219,72 +249,63 @@ namespace BotFFlowers
 			new[]
 			{
 				InlineKeyboardButton.WithCallbackData(text: "❌ Очистить корзину", callbackData: Q(CartDeleteCallData)),
-				InlineKeyboardButton.WithCallbackData(text: "✅ Оформить заказ", callbackData: Q(CartDeleteCallData)),
+				InlineKeyboardButton.WithCallbackData(text: "✅ Оформить заказ", callbackData: Q(NotificateOrder)),
 
 			}
 
 		);
-
-
-
-			//PushL("🛒 <b>Корзина:</b>\n");
-			await Client.SendTextMessageAsync(ChatId, "🛒 <b>Корзина:</b>\n", Telegram.Bot.Types.Enums.ParseMode.Html);
-		
-			List<int> total_list = new List<int>();
-			int total = 0;
-			foreach (var item in shop_cart)
+			
+			await Client.SendTextMessageAsync(ChatId, "🛒 <b>Корзина:</b>\n❗ Доставка шаров, тортов и игрушек осуществляется только вместе с доставкой букета!\n", Telegram.Bot.Types.Enums.ParseMode.Html);
+			
+			if (shop_cart.Count>0)
             {
-				await Client.SendTextMessageAsync(ChatId, $"⭐ {item.Name} : {item.Price}", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: delete_cart);
-				string check = new string(item.Price.Where(t => char.IsDigit(t)).ToArray());
-				int price = Convert.ToInt32(check);
-				total_list.Add(price);
-			};
-			foreach(var i in total_list)
+				List<int> total_list = new List<int>();
+				int total = 0;
+
+				for (int i = 0; i < shop_cart.Count; i++)
+				{
+
+					await Client.SendTextMessageAsync(ChatId, $"⭐ {shop_cart.ElementAt(i).Name} : {shop_cart.ElementAt(i).Price}", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: delete_cart);
+					string check = new string(shop_cart.ElementAt(i).Price.Where(t => char.IsDigit(t)).ToArray());
+					int price = Convert.ToInt32(check);
+					total_list.Add(price);
+					id = i;
+
+				}
+				foreach (var i in total_list)
+				{
+					total += i;
+				}
+				await Client.SendTextMessageAsync(ChatId, $"💰 Итоговая сумма заказа(Без учёта доставки): {total} ₽", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: create_order);
+			}
+            else
             {
-				total += i;
-            }
-			await Client.SendTextMessageAsync(ChatId,$"💰 Итоговая сумма заказа(Без учёта доставки): {total} ₽",Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: create_order);
+				await Client.SendTextMessageAsync(ChatId, $"Вы ничего не добавили в корзину 😔", Telegram.Bot.Types.Enums.ParseMode.Html);
+			}
 			
 			
-
-
+			
 
 		}
-
+		//Полная очистка корзины
 		[Action]
 		public async void CartDeleteCallData()
         {
 			shop_cart.Clear();
 			await Client.SendTextMessageAsync(ChatId, "✅ Корзина очищена", Telegram.Bot.Types.Enums.ParseMode.Html);
         }
-		//Стоимость доставки
+		//Удаление из корзины по ID
 		[Action]
-		public void PressDelivery()
-		{
-			
-			Client.SendPhotoAsync(ChatId, "https://i.siteapi.org/7EEvg7hzsPJrNpOqfsoyA6C4D8E=/0x44:618x824/ac20a296e8e485f.ru.s.siteapi.org/img/6920e1k6n5kw4gwgcgwkgs0g4gwooo", "🚚 <b>Стоимость доставки</b>\n<b>Самовывоз</b> - 0 ₽\n<b>Каменск - Шахтинский(центр и мкр.60 лет Октября)</b> - 150 ₽\n<b>Комбинат(район)</b> - 200 ₽\n<b>Старая Станица(район)</b> - 300 ₽\n<b>Шахтёрский(район)</b> - 200 ₽\n<b>Южный(район)</b> - 250 ₽\n<b>Абрамовка(посёлок)</b> - 300 ₽\n<b>Астахов(хутор)</b> - 550 ₽\n<b>Богданов(хутор)</b> - 550 ₽\n<b>Вишневецкий</b> - 800 ₽\n<b>Волченский(хутор)</b> - 500 ₽\n<b>Глубокий(посёлок)</b> - 650 ₽\n<b>Данилов(хутор)</b> - 1200 ₽\n<b>Донецк РФ</b> - 900 ₽\n<b>Диченский(хутор)</b> - 400 ₽\n<b>Заводской(микрорайон)</b> - 450 ₽\n<b>Калитвенская(станица)</b> - 500 ₽\n<b>Красновка(хутор)</b> - 350 ₽\n<b>Леcной(посёлок)</b> - 300 ₽\n<b>Лиховской(Лихая)</b> - 600 ₽\n<b>Лихая(за переездом)</b> - 700 ₽\n<b>Лихой(хутор)</b> - 800 ₽\n<b>Малая Каменка(хутор)</b> - 400 ₽\n<b>Масаловка(хутор)</b> - 550 ₽\n<b>Нижнеговейный(хутор)</b> - 300 ₽\n<b>Углеродовский</b> - 850 ₽\n<b>Филлипенков(хутор)</b> - 400 ₽\n<b>Чистоозерный(посёлок)</b> - 550 ₽\n<b>Шахта 17</b> - 500 ₽", Telegram.Bot.Types.Enums.ParseMode.Html);
-			
-			Send();
-		}
-		
-		//Рейтинги
-		[Action]
-		public void PressRate()
+		public async void DeleteAtId(int id)
         {
-			PushL("<b>Наш рейтинг:</b>\n\n4.8 ⭐ (РЕЙТИНГ ЯНДЕКС)\n*на основе 42 официальных отзывов в сервисах данной поисковой службы\n\n4.74 ⭐ (РЕЙТИНГ GOOGLE)\n*на основе 57 официальных отзывов в сервисах данной поисковой службы");
-			RowButton("⏪ Назад", Q(Start));
+			shop_cart.RemoveAt(id);
+			await Client.SendTextMessageAsync(ChatId, "✅ Товар удалён", Telegram.Bot.Types.Enums.ParseMode.Html);
 		}
-		//Исключение
-		[On(Handle.Unknown)]
-		public void Unknown()
-        {
-			PushL("Команда не распознана!");
-        }
 
-		//Постинг зона
 
 		
-
+		
+		//Коллбэк кнопки добавления в корзину
 		[Action]
 		public async void CallData(string item_name,string _price)
         {
@@ -295,50 +316,100 @@ namespace BotFFlowers
         }
 
 		
-
-		public void SendPhoto(string _imgurl,string  _itemname, string _price)
+		//Постинг товаров
+		public  void SendPhoto(string _imgurl,string  _itemname, string _price)
 		{
 
 			InlineKeyboardMarkup inlineKeyboard = new(
 
 			new[]
 			{
-				InlineKeyboardButton.WithCallbackData(text: "🛒 В корзину", callbackData: Q(CallData,$"{_itemname}",_price)),
+				InlineKeyboardButton.WithCallbackData(text: "🛒 В корзину", callbackData: Q(CallData,_itemname,_price)),
 
 			}
 
 		);
 
-			Client.SendPhotoAsync(ChatId,_imgurl,$"<b>{_itemname}</b>\n\nЦена: {_price}\n\n🚚 Доставка или самовывоз", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: inlineKeyboard);
+			 Client.SendPhotoAsync(ChatId,_imgurl,$"<b>{_itemname}</b>\n\nЦена: {_price}\n\n🚚 Доставка или самовывоз", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: inlineKeyboard);
 		}
-		
-
-		//Маркап
 
 
 		
-			
-			
-		//Сортировка и постинг
+
+
+		//Отправка в канал уведомления о заказе
 		[Action]
-		public void PushItem(string _header, int from_price, int to_price)
+		public async void NotificateOrder()
 		{
+			PushL("🙂 Ваше ФИО:");
+			customer_info.Customer_name = "Артем";
+			PushL("📱 Ваш номер телефона:");
+			customer_info.Customer_number = "+79604708515";
+			PushL("🙂 ФИО получателя:");
+			customer_info.Receive_name = "Соня";
+			PushL("📱 Номер телефона получателя:");
+			customer_info.Receive_number = "+79281798317";
+			PushL("🏠 Адрес получателя:");
+			customer_info.Address = "Ворошилова 8А, кв 40";
+			PushL("🗒 Дополнительные пожелания:");
+			customer_info.Additional = "Фотоотчет хочу";
+			List<int> total_price = new List<int>();
+			int result_price = 0;
+			if(customer_info.Customer_name is not null && customer_info.Customer_number is not null)
+            {
+				PushL("✅ <b>Заказ оформлен!</b>\nВ ближайшее время с вами свяжется менеджер для подтверждения заказа!");
+				string ID_ORDER = random.Next(500000).ToString();
 
-			ParseItem(baseurl + _header);
-			for (int i = 0; i < prices.Count; i++)
-			{
-				string check = new string(prices.ElementAt(i).Where(t => char.IsDigit(t)).ToArray());
-				int price = Convert.ToInt32(check);
-				if (price >= from_price && price <= to_price)
+				await Notif.SendTextMessageAsync(chatId: "-1001795322586", text: $"🟩 <b>Новый заказ! #{ID_ORDER}</b>\n<b>Заказчик:</b> {customer_info.Customer_name} \nНомер заказчика: {customer_info.Customer_number} \n<b>Получатель:</b> {customer_info.Receive_name} \nНомер получателя: {customer_info.Receive_number} \n<b>Адрес:</b> {customer_info.Address} \n<b>Дополнительно:</b> {customer_info.Additional} \nЗаказанные товары 👇", Telegram.Bot.Types.Enums.ParseMode.Html);
+				for (int i = 0; i < shop_cart.Count; i++)
 				{
-					SendPhoto(urls.ElementAt(i), titles.ElementAt(i), prices.ElementAt(i));
+
+					//	await Notif.SendPhotoAsync(chatId: "-1001795322586", photo: shop_cart.ElementAt(i).UrlImg, caption: $"Товар: {shop_cart.ElementAt(i).Name}", Telegram.Bot.Types.Enums.ParseMode.Html);
+					string check = new string(shop_cart.ElementAt(i).Price.Where(t => char.IsDigit(t)).ToArray());
+					int price = Convert.ToInt32(check);
+					total_price.Add(price);
+					await Notif.SendTextMessageAsync(chatId: "-1001795322586", text: $"<b>Товар:</b> {shop_cart.ElementAt(i).Name}  <b>Стоимость:</b> {shop_cart.ElementAt(i).Price} ", Telegram.Bot.Types.Enums.ParseMode.Html);
+
 				}
 
+				foreach (var i in total_price)
+				{
+					result_price += i;
+				}
+				await Notif.SendTextMessageAsync(chatId: "-1001795322586", text: $"<b>Итоговая сумма БЕЗ учета доставки:</b> {result_price} ₽", Telegram.Bot.Types.Enums.ParseMode.Html);
 			}
+            else
+            {
+				await Client.SendTextMessageAsync(ChatId, "😕 Некорректные данные!\n Оформите заказ в корзине снова и заполните корректные данные!", Telegram.Bot.Types.Enums.ParseMode.Html);
+            }
+			
 		}
+		//Обработка сообщений пользователя
 		
-		//Callback
 
+		//Сортировка
+		[Action]
+			public void PushItem(string _header, int from_price, int to_price)
+			{
+
+				ParseItem(baseurl + _header);
+			
+				for (int i = 0; i < prices.Count; i++)
+				{
+					string check = new string(prices.ElementAt(i).Where(t => char.IsDigit(t)).ToArray());
+					int price = Convert.ToInt32(check);
+					if (price >= from_price && price <= to_price)
+					{
+						SendPhoto(urls.ElementAt(i), titles.ElementAt(i), prices.ElementAt(i));
+					
+					}
+
+				}
+			}
+			
+		
+		
+		
 		//Парсинг
 		public void ParseItem(string _baseurl)
 		{		

@@ -11,6 +11,7 @@ namespace BotFFlowers
         {
 			Name = name;
 			Price = price;
+			
         }
 	}
 }
