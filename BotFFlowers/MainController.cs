@@ -9,13 +9,16 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using Telegram.Bot.Args;
 using Telegram.Bot.Exceptions;
+using Telegram.Bot.Types.Enums;
 
 namespace BotFFlowers
 {
-	public class MainController : BotControllerBase
+	public class MainController : BotController
 	{
 		Random random = new Random();
+		//Мэйн бот
 		private static TelegramBotClient BotGen = new TelegramBotClient("5249074040:AAGjwQxQHo17Ut6ychH50QMHmgEwyndUbZo");
+		//Бот отправкм заказов в приватный канал
 		private static TelegramBotClient Notif = new TelegramBotClient("5213399849:AAHa_-r0-xgtplHmaMro9m8jmQ88qe8Nk8w");
 		List<string> prices = new List<string>();
 		List<string> titles = new List<string>();
@@ -227,7 +230,7 @@ namespace BotFFlowers
 		{
 			PushL("Команда не распознана!");
 		}
-
+		
 		//Корзина
 		[Action]
 		public async void PressMainBasket()
@@ -282,9 +285,7 @@ namespace BotFFlowers
             {
 				await Client.SendTextMessageAsync(ChatId, $"Вы ничего не добавили в корзину 😔", Telegram.Bot.Types.Enums.ParseMode.Html);
 			}
-			
-			
-			
+	
 
 		}
 		//Полная очистка корзины
@@ -301,9 +302,6 @@ namespace BotFFlowers
 			shop_cart.RemoveAt(id);
 			await Client.SendTextMessageAsync(ChatId, "✅ Товар удалён", Telegram.Bot.Types.Enums.ParseMode.Html);
 		}
-
-
-		
 		
 		//Коллбэк кнопки добавления в корзину
 		[Action]
@@ -333,34 +331,37 @@ namespace BotFFlowers
 			 Client.SendPhotoAsync(ChatId,_imgurl,$"<b>{_itemname}</b>\n\nЦена: {_price}\n\n🚚 Доставка или самовывоз", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: inlineKeyboard);
 		}
 
-
-		
-
-
 		//Отправка в канал уведомления о заказе
 		[Action]
-		public async void NotificateOrder()
+		public async Task NotificateOrder()
 		{
 			PushL("🙂 Ваше ФИО:");
-			customer_info.Customer_name = "Артем";
+			await Send();
+			 
+			customer_info.Customer_name = await AwaitText();
 			PushL("📱 Ваш номер телефона:");
-			customer_info.Customer_number = "+79604708515";
+			await Send();
+			customer_info.Customer_number = await AwaitText();
 			PushL("🙂 ФИО получателя:");
-			customer_info.Receive_name = "Соня";
+			await Send();
+			customer_info.Receive_name = await AwaitText();
 			PushL("📱 Номер телефона получателя:");
-			customer_info.Receive_number = "+79281798317";
+			await Send();
+			customer_info.Receive_number = await AwaitText();
 			PushL("🏠 Адрес получателя:");
-			customer_info.Address = "Ворошилова 8А, кв 40";
+			await Send();
+			customer_info.Address = await AwaitText();
 			PushL("🗒 Дополнительные пожелания:");
-			customer_info.Additional = "Фотоотчет хочу";
+			await Send();
+			customer_info.Additional = await AwaitText();
 			List<int> total_price = new List<int>();
 			int result_price = 0;
 			if(customer_info.Customer_name is not null && customer_info.Customer_number is not null)
             {
 				PushL("✅ <b>Заказ оформлен!</b>\nВ ближайшее время с вами свяжется менеджер для подтверждения заказа!");
+				await Send();
 				string ID_ORDER = random.Next(500000).ToString();
-
-				await Notif.SendTextMessageAsync(chatId: "-1001795322586", text: $"🟩 <b>Новый заказ! #{ID_ORDER}</b>\n<b>Заказчик:</b> {customer_info.Customer_name} \nНомер заказчика: {customer_info.Customer_number} \n<b>Получатель:</b> {customer_info.Receive_name} \nНомер получателя: {customer_info.Receive_number} \n<b>Адрес:</b> {customer_info.Address} \n<b>Дополнительно:</b> {customer_info.Additional} \nЗаказанные товары 👇", Telegram.Bot.Types.Enums.ParseMode.Html);
+				await Notif.SendTextMessageAsync(chatId: "-1001795322586", text: $"🟩 <b>Новый заказ! #{ID_ORDER}</b>\n<b>Заказчик:</b> {customer_info.Customer_name} \nНомер заказчика: {customer_info.Customer_number}\nТелега заказчика: @{Context.GetUsername()} \n<b>Получатель:</b> {customer_info.Receive_name} \nНомер получателя: {customer_info.Receive_number} \n<b>Адрес:</b> {customer_info.Address} \n<b>Дополнительно:</b> {customer_info.Additional} \nЗаказанные товары 👇", Telegram.Bot.Types.Enums.ParseMode.Html);
 				for (int i = 0; i < shop_cart.Count; i++)
 				{
 
@@ -380,7 +381,7 @@ namespace BotFFlowers
 			}
             else
             {
-				await Client.SendTextMessageAsync(ChatId, "😕 Некорректные данные!\n Оформите заказ в корзине снова и заполните корректные данные!", Telegram.Bot.Types.Enums.ParseMode.Html);
+				await Client.SendTextMessageAsync(ChatId, "😕 Некорректные данные!\n Оформите заказ в корзине снова!", Telegram.Bot.Types.Enums.ParseMode.Html);
             }
 			
 		}
@@ -406,10 +407,7 @@ namespace BotFFlowers
 
 				}
 			}
-			
-		
-		
-		
+	
 		//Парсинг
 		public void ParseItem(string _baseurl)
 		{		
@@ -421,8 +419,7 @@ namespace BotFFlowers
 			};
 			HD = web.Load(_baseurl);
 
-			// Собственно, здесь и производится выборка интересующих нам нодов
-			// В данном случае выбираем блочные элементы с классом eTitle
+			
 			HtmlNodeCollection PricesElements = HD.DocumentNode.SelectNodes("//div[@class='product-item-price']");
 			HtmlNodeCollection TitlesElements = HD.DocumentNode.SelectNodes("//div[@class='product-item__link']//a");
 			HtmlNodeCollection UrlsElements = HD.DocumentNode.SelectNodes("//div[@class='product-item__content']//picture//img");
