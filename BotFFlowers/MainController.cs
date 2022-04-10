@@ -41,7 +41,7 @@ namespace BotFFlowers
 		string header_postcards = "otkrytki";
 		
 
-		[Action("/start", "Главное меню")]
+		[Action("/start", "Меню")]
 		public void Start()
         {
 			
@@ -57,6 +57,7 @@ namespace BotFFlowers
 			RowButton("🎂 9. Торты", Q(PressCakes));
 			RowButton("🍏 10. Фрукты", Q(PressFruits));
 			RowButton("🗾 11. Открытки", Q(PressPostcards));
+			RowButton("🔥 12. Instagram");
 			RowButton("⭐ Наши оценки", Q(PressRate));
 			RowButton("🛒 Корзина", Q(PressMainBasket));
 			Button("🚚 Доставка", Q(PressDelivery));
@@ -66,13 +67,14 @@ namespace BotFFlowers
 			
 			
 		}
-		
+		//Контакты
 		[Action]
 		public async void PressContact()
         {
-			
-			await Client.SendPhotoAsync(ChatId, "https://i.siteapi.org/jZcycCnxSz_otO-zGfPlcmFy0nc=/fit-in/330x/top/s.siteapi.org/ac20a296e8e485f.ru/img/at32995njz4ksckckw88gkg0gcosgs", "📱 <b>Контакты</b>\n📍 <b>Адрес:</b>\n пр.Карла Маркса, 54г.Каменск-Шахтинский\n(Режим работы: Круглосуточно)\n📍 <b>Адрес:</b>\n пр.Карла Маркса, 79, Каменск-Шахтинский\n(Режим работы: 7:00-20:00)\n📞 <b>Телефоны:</b>\n +7-928-180-63-88\n +7-918-576-10-88\n📧 <b>E-mail:</b>\n flowerskamensk@mail.ru\n🌐 <b>Сайт:</b>\n https://flowerskamensk.ru/\n📲 <b>Whatsapp:</b>\n +7-928-180-63-88\n🕰 <b>Прием заказов:</b>\n с 8:00-22:00", Telegram.Bot.Types.Enums.ParseMode.Html);
-			
+
+			//await Client.SendPhotoAsync(ChatId, "https://i.siteapi.org/jZcycCnxSz_otO-zGfPlcmFy0nc=/fit-in/330x/top/s.siteapi.org/ac20a296e8e485f.ru/img/at32995njz4ksckckw88gkg0gcosgs", "📱 <b>Контакты</b>\n📍 <b>Адрес:</b>\n пр.Карла Маркса, 54г.Каменск-Шахтинский\n(Режим работы: Круглосуточно)\n📍 <b>Адрес:</b>\n пр.Карла Маркса, 79, Каменск-Шахтинский\n(Режим работы: 7:00-20:00)\n📞 <b>Телефоны:</b>\n +7-928-180-63-88\n +7-918-576-10-88\n📧 <b>E-mail:</b>\n flowerskamensk@mail.ru\n🌐 <b>Сайт:</b>\n https://flowerskamensk.ru/\n📲 <b>Whatsapp:</b>\n +7-928-180-63-88\n🕰 <b>Прием заказов:</b>\n с 8:00-22:00", Telegram.Bot.Types.Enums.ParseMode.Html);
+			PushL("📱 <b>Контакты</b>\n📍 <b>Адрес:</b>\n пр.Карла Маркса, 54г.Каменск-Шахтинский\n(Режим работы: Круглосуточно)\n📍 <b>Адрес:</b>\n пр.Карла Маркса, 79, Каменск-Шахтинский\n(Режим работы: 7:00-20:00)\n📞 <b>Телефоны:</b>\n +7-928-180-63-88\n +7-918-576-10-88\n📧 <b>E-mail:</b>\n flowerskamensk@mail.ru\n🌐 <b>Сайт:</b>\n https://flowerskamensk.ru/\n📲 <b>Whatsapp:</b>\n +7-928-180-63-88\n🕰 <b>Прием заказов:</b>\n с 8:00-22:00");
+			RowButton("⏪ Назад", Q(Start));
 		}
 
 		//Buttons Categories
@@ -209,9 +211,9 @@ namespace BotFFlowers
 		[Action]
 		public async void PressDelivery()
 		{
-		//	PushL("🚚 <b>Стоимость доставки</b>\n<b>Самовывоз</b> - 0 ₽\n<b>Каменск - Шахтинский(центр и мкр.60 лет Октября)</b> - 150 ₽\n<b>Комбинат(район)</b> - 200 ₽\n<b>Старая Станица(район)</b> - 300 ₽\n<b>Шахтёрский(район)</b> - 200 ₽\n<b>Южный(район)</b> - 250 ₽\n<b>Абрамовка(посёлок)</b> - 300 ₽\n<b>Астахов(хутор)</b> - 550 ₽\n<b>Богданов(хутор)</b> - 550 ₽\n<b>Вишневецкий</b> - 800 ₽\n<b>Волченский(хутор)</b> - 500 ₽\n<b>Глубокий(посёлок)</b> - 650 ₽\n<b>Данилов(хутор)</b> - 1200 ₽\n<b>Донецк РФ</b> - 900 ₽\n<b>Диченский(хутор)</b> - 400 ₽\n<b>Заводской(микрорайон)</b> - 450 ₽\n<b>Калитвенская(станица)</b> - 500 ₽\n<b>Красновка(хутор)</b> - 350 ₽\n<b>Леcной(посёлок)</b> - 300 ₽\n<b>Лиховской(Лихая)</b> - 600 ₽\n<b>Лихая(за переездом)</b> - 700 ₽\n<b>Лихой(хутор)</b> - 800 ₽\n<b>Малая Каменка(хутор)</b> - 400 ₽\n<b>Масаловка(хутор)</b> - 550 ₽\n<b>Нижнеговейный(хутор)</b> - 300 ₽\n<b>Углеродовский</b> - 850 ₽\n<b>Филлипенков(хутор)</b> - 400 ₽\n<b>Чистоозерный(посёлок)</b> - 550 ₽\n<b>Шахта 17</b> - 500 ₽");
-		//	RowButton("⏪ Назад", Q(Start));
-			await Client.SendPhotoAsync(ChatId, "https://i.siteapi.org/7EEvg7hzsPJrNpOqfsoyA6C4D8E=/0x44:618x824/ac20a296e8e485f.ru.s.siteapi.org/img/6920e1k6n5kw4gwgcgwkgs0g4gwooo", "🚚 <b>Стоимость доставки</b>\n<b>Самовывоз</b> - 0 ₽\n<b>Каменск - Шахтинский(центр и мкр.60 лет Октября)</b> - 150 ₽\n<b>Комбинат(район)</b> - 200 ₽\n<b>Старая Станица(район)</b> - 300 ₽\n<b>Шахтёрский(район)</b> - 200 ₽\n<b>Южный(район)</b> - 250 ₽\n<b>Абрамовка(посёлок)</b> - 300 ₽\n<b>Астахов(хутор)</b> - 550 ₽\n<b>Богданов(хутор)</b> - 550 ₽\n<b>Вишневецкий</b> - 800 ₽\n<b>Волченский(хутор)</b> - 500 ₽\n<b>Глубокий(посёлок)</b> - 650 ₽\n<b>Данилов(хутор)</b> - 1200 ₽\n<b>Донецк РФ</b> - 900 ₽\n<b>Диченский(хутор)</b> - 400 ₽\n<b>Заводской(микрорайон)</b> - 450 ₽\n<b>Калитвенская(станица)</b> - 500 ₽\n<b>Красновка(хутор)</b> - 350 ₽\n<b>Леcной(посёлок)</b> - 300 ₽\n<b>Лиховской(Лихая)</b> - 600 ₽\n<b>Лихая(за переездом)</b> - 700 ₽\n<b>Лихой(хутор)</b> - 800 ₽\n<b>Малая Каменка(хутор)</b> - 400 ₽\n<b>Масаловка(хутор)</b> - 550 ₽\n<b>Нижнеговейный(хутор)</b> - 300 ₽\n<b>Углеродовский</b> - 850 ₽\n<b>Филлипенков(хутор)</b> - 400 ₽\n<b>Чистоозерный(посёлок)</b> - 550 ₽\n<b>Шахта 17</b> - 500 ₽", Telegram.Bot.Types.Enums.ParseMode.Html);
+			PushL("🚚 <b>Стоимость доставки</b>\n<b>Самовывоз</b> - 0 ₽\n<b>Каменск - Шахтинский(центр и мкр.60 лет Октября)</b> - 150 ₽\n<b>Комбинат(район)</b> - 200 ₽\n<b>Старая Станица(район)</b> - 300 ₽\n<b>Шахтёрский(район)</b> - 200 ₽\n<b>Южный(район)</b> - 250 ₽\n<b>Абрамовка(посёлок)</b> - 300 ₽\n<b>Астахов(хутор)</b> - 550 ₽\n<b>Богданов(хутор)</b> - 550 ₽\n<b>Вишневецкий</b> - 800 ₽\n<b>Волченский(хутор)</b> - 500 ₽\n<b>Глубокий(посёлок)</b> - 650 ₽\n<b>Данилов(хутор)</b> - 1200 ₽\n<b>Донецк РФ</b> - 900 ₽\n<b>Диченский(хутор)</b> - 400 ₽\n<b>Заводской(микрорайон)</b> - 450 ₽\n<b>Калитвенская(станица)</b> - 500 ₽\n<b>Красновка(хутор)</b> - 350 ₽\n<b>Леcной(посёлок)</b> - 300 ₽\n<b>Лиховской(Лихая)</b> - 600 ₽\n<b>Лихая(за переездом)</b> - 700 ₽\n<b>Лихой(хутор)</b> - 800 ₽\n<b>Малая Каменка(хутор)</b> - 400 ₽\n<b>Масаловка(хутор)</b> - 550 ₽\n<b>Нижнеговейный(хутор)</b> - 300 ₽\n<b>Углеродовский</b> - 850 ₽\n<b>Филлипенков(хутор)</b> - 400 ₽\n<b>Чистоозерный(посёлок)</b> - 550 ₽\n<b>Шахта 17</b> - 500 ₽");
+			RowButton("⏪ Назад", Q(Start));
+			//await Client.SendPhotoAsync(ChatId, "https://i.siteapi.org/7EEvg7hzsPJrNpOqfsoyA6C4D8E=/0x44:618x824/ac20a296e8e485f.ru.s.siteapi.org/img/6920e1k6n5kw4gwgcgwkgs0g4gwooo", "🚚 <b>Стоимость доставки</b>\n<b>Самовывоз</b> - 0 ₽\n<b>Каменск - Шахтинский(центр и мкр.60 лет Октября)</b> - 150 ₽\n<b>Комбинат(район)</b> - 200 ₽\n<b>Старая Станица(район)</b> - 300 ₽\n<b>Шахтёрский(район)</b> - 200 ₽\n<b>Южный(район)</b> - 250 ₽\n<b>Абрамовка(посёлок)</b> - 300 ₽\n<b>Астахов(хутор)</b> - 550 ₽\n<b>Богданов(хутор)</b> - 550 ₽\n<b>Вишневецкий</b> - 800 ₽\n<b>Волченский(хутор)</b> - 500 ₽\n<b>Глубокий(посёлок)</b> - 650 ₽\n<b>Данилов(хутор)</b> - 1200 ₽\n<b>Донецк РФ</b> - 900 ₽\n<b>Диченский(хутор)</b> - 400 ₽\n<b>Заводской(микрорайон)</b> - 450 ₽\n<b>Калитвенская(станица)</b> - 500 ₽\n<b>Красновка(хутор)</b> - 350 ₽\n<b>Леcной(посёлок)</b> - 300 ₽\n<b>Лиховской(Лихая)</b> - 600 ₽\n<b>Лихая(за переездом)</b> - 700 ₽\n<b>Лихой(хутор)</b> - 800 ₽\n<b>Малая Каменка(хутор)</b> - 400 ₽\n<b>Масаловка(хутор)</b> - 550 ₽\n<b>Нижнеговейный(хутор)</b> - 300 ₽\n<b>Углеродовский</b> - 850 ₽\n<b>Филлипенков(хутор)</b> - 400 ₽\n<b>Чистоозерный(посёлок)</b> - 550 ₽\n<b>Шахта 17</b> - 500 ₽", Telegram.Bot.Types.Enums.ParseMode.Html);
 
 			
 		}
@@ -251,13 +253,24 @@ namespace BotFFlowers
 
 			new[]
 			{
-				InlineKeyboardButton.WithCallbackData(text: "❌ Очистить корзину", callbackData: Q(CartDeleteCallData)),
-				InlineKeyboardButton.WithCallbackData(text: "✅ Оформить заказ", callbackData: Q(NotificateOrder)),
+				InlineKeyboardButton.WithCallbackData(text: "⏪ Назад", callbackData: Q(Start)),
+				InlineKeyboardButton.WithCallbackData(text: "❌ Очистить", callbackData: Q(CartDeleteCallData)),
+				InlineKeyboardButton.WithCallbackData(text: "✅ Оформить", callbackData: Q(NotificateOrder)),
 
 			}
 
 		);
-			
+			InlineKeyboardMarkup redirect = new(
+
+			new[]
+			{
+				InlineKeyboardButton.WithCallbackData(text: "⏪ Меню", callbackData: Q(Start)),
+
+
+
+			}
+
+		);
 			await Client.SendTextMessageAsync(ChatId, "🛒 <b>Корзина:</b>\n❗ Доставка шаров, тортов и игрушек осуществляется только вместе с доставкой букета!\n", Telegram.Bot.Types.Enums.ParseMode.Html);
 			
 			if (shop_cart.Count>0)
@@ -283,7 +296,8 @@ namespace BotFFlowers
 			}
             else
             {
-				await Client.SendTextMessageAsync(ChatId, $"Вы ничего не добавили в корзину 😔", Telegram.Bot.Types.Enums.ParseMode.Html);
+				
+				await Client.SendTextMessageAsync(ChatId, $"Вы ничего не добавили в корзину 😔", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: redirect);
 			}
 	
 
@@ -292,24 +306,56 @@ namespace BotFFlowers
 		[Action]
 		public async void CartDeleteCallData()
         {
+			InlineKeyboardMarkup redirect_basket = new(
+
+			new[]
+			{
+				InlineKeyboardButton.WithCallbackData(text: "⏪ Меню", callbackData: Q(Start)),
+				
+
+
+			}
+
+		);
 			shop_cart.Clear();
-			await Client.SendTextMessageAsync(ChatId, "✅ Корзина очищена", Telegram.Bot.Types.Enums.ParseMode.Html);
+			await Client.SendTextMessageAsync(ChatId, "✅ Корзина очищена", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: redirect_basket);
         }
-		//Удаление из корзины по ID
+		//Удаление одного товара из корзины по ID
 		[Action]
 		public async void DeleteAtId(int id)
         {
+			InlineKeyboardMarkup redirect_basket = new(
+
+			new[]
+			{
+				InlineKeyboardButton.WithCallbackData(text: "⏪ Меню", callbackData: Q(Start)),
+				InlineKeyboardButton.WithCallbackData(text: "🛒 К корзине", callbackData: Q(PressMainBasket)),
+
+
+			}
+
+		);
 			shop_cart.RemoveAt(id);
-			await Client.SendTextMessageAsync(ChatId, "✅ Товар удалён", Telegram.Bot.Types.Enums.ParseMode.Html);
+			await Client.SendTextMessageAsync(ChatId, "✅ Товар удалён", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: redirect_basket);
 		}
 		
 		//Коллбэк кнопки добавления в корзину
 		[Action]
 		public async void CallData(string item_name,string _price)
         {
+			InlineKeyboardMarkup redirect_basket = new(
 
+			new[]
+			{
+				InlineKeyboardButton.WithCallbackData(text: "⏪ Меню", callbackData: Q(Start)),
+				InlineKeyboardButton.WithCallbackData(text: "🛒 К корзине", callbackData: Q(PressMainBasket)),
+				
+
+			}
+
+		);
 			shop_cart.Add(new Item(item_name,_price));
-			await Client.SendTextMessageAsync(ChatId, $"✅ Товар {item_name} добавлен в корзину!", Telegram.Bot.Types.Enums.ParseMode.Html);
+			await Client.SendTextMessageAsync(ChatId, $"✅ Товар {item_name} добавлен в корзину!", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: redirect_basket);
             
         }
 
@@ -317,7 +363,6 @@ namespace BotFFlowers
 		//Постинг товаров
 		public  void SendPhoto(string _imgurl,string  _itemname, string _price)
 		{
-
 			InlineKeyboardMarkup inlineKeyboard = new(
 
 			new[]
@@ -331,11 +376,11 @@ namespace BotFFlowers
 			 Client.SendPhotoAsync(ChatId,_imgurl,$"<b>{_itemname}</b>\n\nЦена: {_price}\n\n🚚 Доставка или самовывоз", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: inlineKeyboard);
 		}
 
-		//Отправка в канал уведомления о заказе
+		//Обработка сообщений пользователя и постройка уведомления нового заказа
 		[Action]
 		public async Task NotificateOrder()
 		{
-			
+			PushL("Пожалуйста, заполните форму ниже 👇");
 			PushL("🙂 Ваше ФИО:");
 			await Send();			 
 			customer_info.Customer_name = await AwaitText();
@@ -358,8 +403,23 @@ namespace BotFFlowers
 			int result_price = 0;
 			if(customer_info.Customer_name is not null && customer_info.Customer_number is not null)
             {
-				PushL("✅ <b>Заказ оформлен!</b>\nВ ближайшее время с вами свяжется менеджер для подтверждения заказа!");
-				await Send();
+				//К меню
+				InlineKeyboardMarkup back_menu = new(
+
+			new[]
+			{
+				InlineKeyboardButton.WithCallbackData(text: "⏪ Меню", callbackData: Q(Start)),
+
+			}
+
+		);
+				//Конец
+				await Client.SendTextMessageAsync(ChatId, "✅ <b>Заказ оформлен!</b>\nВ ближайшее время с вами свяжется менеджер для подтверждения заказа!", ParseMode.Html,replyMarkup: back_menu);
+
+
+				//PushL("✅ <b>Заказ оформлен!</b>\nВ ближайшее время с вами свяжется менеджер для подтверждения заказа!");
+				//await Send();
+
 				string ID_ORDER = random.Next(500000).ToString();
 				string Notif_message = $"🟩 <b>Новый заказ! #{ID_ORDER}</b>\n===============\n<b>Заказчик:</b> {customer_info.Customer_name} \nНомер заказчика: {customer_info.Customer_number}\nТелега заказчика: @{Context.GetUsername()} \n===============\n<b>Получатель:</b> {customer_info.Receive_name} \nНомер получателя: {customer_info.Receive_number} \n===============\n<b>Адрес:</b> {customer_info.Address} \n===============\n<b>Дополнительно:</b> {customer_info.Additional} \n===============\n<b>Заказанные товары</b> 👇\n";
 			
@@ -389,7 +449,7 @@ namespace BotFFlowers
             }
 			
 		}
-		//Обработка сообщений пользователя
+		
 		
 
 		//Сортировка
