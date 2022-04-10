@@ -335,9 +335,9 @@ namespace BotFFlowers
 		[Action]
 		public async Task NotificateOrder()
 		{
+			
 			PushL("🙂 Ваше ФИО:");
-			await Send();
-			 
+			await Send();			 
 			customer_info.Customer_name = await AwaitText();
 			PushL("📱 Ваш номер телефона:");
 			await Send();
@@ -361,23 +361,27 @@ namespace BotFFlowers
 				PushL("✅ <b>Заказ оформлен!</b>\nВ ближайшее время с вами свяжется менеджер для подтверждения заказа!");
 				await Send();
 				string ID_ORDER = random.Next(500000).ToString();
-				await Notif.SendTextMessageAsync(chatId: "-1001795322586", text: $"🟩 <b>Новый заказ! #{ID_ORDER}</b>\n<b>Заказчик:</b> {customer_info.Customer_name} \nНомер заказчика: {customer_info.Customer_number}\nТелега заказчика: @{Context.GetUsername()} \n<b>Получатель:</b> {customer_info.Receive_name} \nНомер получателя: {customer_info.Receive_number} \n<b>Адрес:</b> {customer_info.Address} \n<b>Дополнительно:</b> {customer_info.Additional} \nЗаказанные товары 👇", Telegram.Bot.Types.Enums.ParseMode.Html);
+				string Notif_message = $"🟩 <b>Новый заказ! #{ID_ORDER}</b>\n===============\n<b>Заказчик:</b> {customer_info.Customer_name} \nНомер заказчика: {customer_info.Customer_number}\nТелега заказчика: @{Context.GetUsername()} \n===============\n<b>Получатель:</b> {customer_info.Receive_name} \nНомер получателя: {customer_info.Receive_number} \n===============\n<b>Адрес:</b> {customer_info.Address} \n===============\n<b>Дополнительно:</b> {customer_info.Additional} \n===============\n<b>Заказанные товары</b> 👇\n";
+			
 				for (int i = 0; i < shop_cart.Count; i++)
 				{
 
-					//	await Notif.SendPhotoAsync(chatId: "-1001795322586", photo: shop_cart.ElementAt(i).UrlImg, caption: $"Товар: {shop_cart.ElementAt(i).Name}", Telegram.Bot.Types.Enums.ParseMode.Html);
+					
 					string check = new string(shop_cart.ElementAt(i).Price.Where(t => char.IsDigit(t)).ToArray());
 					int price = Convert.ToInt32(check);
 					total_price.Add(price);
-					await Notif.SendTextMessageAsync(chatId: "-1001795322586", text: $"<b>Товар:</b> {shop_cart.ElementAt(i).Name}  <b>Стоимость:</b> {shop_cart.ElementAt(i).Price} ", Telegram.Bot.Types.Enums.ParseMode.Html);
-
+					
+					Notif_message += $"⭐ Товар: {shop_cart.ElementAt(i).Name}  Стоимость: {shop_cart.ElementAt(i).Price}\n ";
 				}
 
 				foreach (var i in total_price)
 				{
 					result_price += i;
 				}
-				await Notif.SendTextMessageAsync(chatId: "-1001795322586", text: $"<b>Итоговая сумма БЕЗ учета доставки:</b> {result_price} ₽", Telegram.Bot.Types.Enums.ParseMode.Html);
+				Notif_message += $"===============\n<b>Итоговая сумма</b> БЕЗ учета доставки: {result_price} ₽";
+				await Notif.SendTextMessageAsync(chatId: "-1001795322586", text: $"{Notif_message}", Telegram.Bot.Types.Enums.ParseMode.Html);
+			
+				
 			}
             else
             {
