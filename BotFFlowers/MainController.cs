@@ -481,7 +481,7 @@ namespace BotFFlowers
 
 		//CMS
 
-		//Добавить товар
+		//Создание карточки
 		[Action]
 		public void CMS_ADD()
         {
@@ -498,20 +498,15 @@ namespace BotFFlowers
 			{
 				new[]
                 {
-					InlineKeyboardButton.WithCallbackData(text: "📱 Предпросмотр", callbackData: Q(Start)),
+					InlineKeyboardButton.WithCallbackData(text: "📱 Предпросмотр", callbackData: Q(PreviewCMS)),
 				},
 				new []
                 {
-					InlineKeyboardButton.WithCallbackData(text: "✅ Добавить", callbackData: Q(Start)),
+					InlineKeyboardButton.WithCallbackData(text: "✅ Добавить", callbackData: Q(CMS_Create)),
 					InlineKeyboardButton.WithCallbackData(text: "❌ Отмена", callbackData: Q(CMS_ADD)),
 				},
-
-				
-
 			}
-			
-
-		);
+			);
 			PushL("Добавь фото товара:");
 			await Send();
 			temp_cms.Img = await AwaitText();
@@ -521,16 +516,34 @@ namespace BotFFlowers
 			PushL("Добавь стоимость товара:");
 			await Send();
 			temp_cms.Price = await AwaitText();
-			Console.WriteLine(temp_cms.Img);
-			Console.WriteLine(temp_cms.Text);
-			Console.WriteLine(temp_cms.Price);
+			
 			await Client.SendTextMessageAsync(ChatId, $"Карточка товара сформирована!", ParseMode.Html, replyMarkup: product_sample);
 		}
 		//Удалить товар
+		[Action]
 		public async void CMS_DELETE()
         {
 			
 
+		}
+		//Добавление
+		[Action]
+		public async Task CMS_Create()
+		{
+			await Client.SendTextMessageAsync(ChatId,$"✅ Товар {temp_cms.Text} успешно добавлен в категорию!");
+		}
+		//Предпросмотр
+		[Action]
+		public async Task PreviewCMS()
+		{
+			InlineKeyboardMarkup add_markup = new(
+				new[]
+				{
+					InlineKeyboardButton.WithCallbackData(text: "✅ Добавить", callbackData: Q(CMS_Create)),
+					InlineKeyboardButton.WithCallbackData(text: "❌ Отмена", callbackData: Q(Start)),
+				}
+			);
+			await Client.SendTextMessageAsync(ChatId,$"Картинка {temp_cms.Img}\nТекст{temp_cms.Text}\nЦена{temp_cms.Price}", replyMarkup:add_markup);
 		}
 	}
 }
