@@ -10,11 +10,15 @@ using Telegram.Bot.Types.ReplyMarkups;
 using Telegram.Bot.Args;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types.Enums;
+using System.Data.SQLite;
 
 namespace BotFFlowers
 {
 	public class MainController : BotController
 	{
+		//БД
+		public static SQLiteConnection DB;
+
 		Random random = new Random();
 		//Мэйн бот
 		private static TelegramBotClient BotGen = new TelegramBotClient("5249074040:AAGjwQxQHo17Ut6ychH50QMHmgEwyndUbZo");
@@ -530,6 +534,15 @@ namespace BotFFlowers
 		[Action]
 		public async Task CMS_Create()
 		{
+			DB = new SQLiteConnection("Data Source=DB.db;");
+			DB.Open();
+			SQLiteCommand create = DB.CreateCommand();
+			create.CommandText = "INSERT INTO Product (ChatId, Username) VALUES (@Img, @Text,@Price)";
+			create.Parameters.AddWithValue("@Img", temp_cms.Img );
+			create.Parameters.AddWithValue("@Text",temp_cms.Text);
+			create.Parameters.AddWithValue("@Price",temp_cms.Price);
+			create.ExecuteNonQuery();
+			DB.Close();
 			await Client.SendTextMessageAsync(ChatId,$"✅ Товар {temp_cms.Text} успешно добавлен в категорию!");
 		}
 		//Предпросмотр
