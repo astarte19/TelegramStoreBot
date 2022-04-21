@@ -11,6 +11,8 @@ using Telegram.Bot.Args;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types.Enums;
 using System.Data.SQLite;
+using System.Data;
+using Microsoft.Data.Sqlite;
 
 namespace BotFFlowers
 {
@@ -58,7 +60,7 @@ namespace BotFFlowers
             {
 				PushL($"✋ Привет, {Context.GetUserFullName()}!\n\n⚪ <b>Панель админа + CMS</b>");
 				RowButton("💁 Режим обычного пользователя",Q(StartAdmin));
-				RowButton("🗾 Показать товары");
+				RowButton("🗾 Показать товары",Q(Check_all));
 				RowButton("✅ Добавить товар",Q(CMS_ADD));					
 				RowButton("🤝 Доступ к CMS ");
 			}
@@ -488,24 +490,38 @@ namespace BotFFlowers
 		//Создание карточки
 		[Action]
 		public void CMS_ADD()
-        {
+		{
 			PushL("Добавление товара");
 			RowButton("⏪ Назад", Q(Start));
-			Button("➕ Добавить",Q(Add_product));
-        }
+			Button("➕ Добавить", Q(Add_product));
+		}
+
+		//Просмотр всех товаров
+		[Action]
+		public async void Check_all()
+		{
+			InlineKeyboardMarkup removeItem = new(
+					new[]
+			{
+				InlineKeyboardButton.WithCallbackData(text: "❌ Удалить", callbackData: Q(Start)),
+			}
+
+		);
+		}
+		//Формировка карточки
 		[Action]
 		public async Task Add_product()
-        {
+		{
 			InlineKeyboardMarkup product_sample = new(
 
 			new[]
 			{
 				new[]
-                {
+				{
 					InlineKeyboardButton.WithCallbackData(text: "📱 Предпросмотр", callbackData: Q(PreviewCMS)),
 				},
 				new []
-                {
+				{
 					InlineKeyboardButton.WithCallbackData(text: "✅ Добавить", callbackData: Q(CMS_Create)),
 					InlineKeyboardButton.WithCallbackData(text: "❌ Отмена", callbackData: Q(CMS_ADD)),
 				},
@@ -520,30 +536,20 @@ namespace BotFFlowers
 			PushL("Добавь стоимость товара:");
 			await Send();
 			temp_cms.Price = await AwaitText();
-			
 			await Client.SendTextMessageAsync(ChatId, $"Карточка товара сформирована!", ParseMode.Html, replyMarkup: product_sample);
 		}
-		//Удалить товар
-		[Action]
-		public async void CMS_DELETE()
-        {
-			
 
-		}
-		//Добавление
+		//Final добавление в бд
 		[Action]
 		public async Task CMS_Create()
 		{
-			DB = new SQLiteConnection("Data Source=DB.db;");
-			DB.Open();
-			SQLiteCommand create = DB.CreateCommand();
-			create.CommandText = "INSERT INTO Product (ChatId, Username) VALUES (@Img, @Text,@Price)";
-			create.Parameters.AddWithValue("@Img", temp_cms.Img );
-			create.Parameters.AddWithValue("@Text",temp_cms.Text);
-			create.Parameters.AddWithValue("@Price",temp_cms.Price);
-			create.ExecuteNonQuery();
-			DB.Close();
-			await Client.SendTextMessageAsync(ChatId,$"✅ Товар {temp_cms.Text} успешно добавлен в категорию!");
+
+			var product = new Products();
+			product.Image = temp_cms.Img;
+			product.Text = temp_cms.Text;
+			product.Price = temp_cms.Price;
+			AddProduct(product);
+			await Client.SendTextMessageAsync(ChatId, $"✅ Товар {product.Text} успешно добавлен в категорию!");
 		}
 		//Предпросмотр
 		[Action]
@@ -556,8 +562,161 @@ namespace BotFFlowers
 					InlineKeyboardButton.WithCallbackData(text: "❌ Отмена", callbackData: Q(Start)),
 				}
 			);
-			await Client.SendTextMessageAsync(ChatId,$"Картинка {temp_cms.Img}\nТекст{temp_cms.Text}\nЦена{temp_cms.Price}", replyMarkup:add_markup);
+			await Client.SendTextMessageAsync(ChatId, $"Картинка {temp_cms.Img}\nТекст{temp_cms.Text}\nЦена{temp_cms.Price}", replyMarkup: add_markup);
 		}
+
+		
+		[Action]
+		public async Task Edit_product()
+        {
+			int id = 5;
+			var new_product = new Products();
+			PushL("Новое фото товара:");
+			await Send();
+			new_product.Image = await AwaitText();
+			PushL("Новое название товара:");
+			await Send();
+			new_product.Text = await AwaitText();
+			PushL("Новая стоимость товара:");
+			await Send();
+			new_product.Price = await AwaitText();
+			new_product.Id = id;
+			EditProduct(new_product);
+			await Client.SendTextMessageAsync(ChatId, "✅ Карточка товара изменена!", ParseMode.Html);
+		}
+		
+		
+		//Удалить товар
+		[Action]
+		public async void CMS_DELETE()
+        {
+			var product = new Products();
+			product.Id = 2;
+			DeleteProduct(product);
+
+		}
+		
+
+		//CRUD CMS
+
+		//Создание, обновление, удаление
+		private int ExecuteWrite(string query, Dictionary<string, object> args)
+		{
+			int numberOfRowsAffected;
+		
+			using (var con = new SQLiteConnection("Data Source=DBFlowers.db"))
+			{
+				con.Open();
+	
+				using (var cmd = new SQLiteCommand(query, con))
+				{
+					foreach (var pair in args)
+					{
+						cmd.Parameters.AddWithValue(pair.Key, pair.Value);
+					}
+					numberOfRowsAffected = cmd.ExecuteNonQuery();
+				}
+				return numberOfRowsAffected;
+			}
+		}
+        //Чтение
+        private DataTable ExecuteRead(string query, Dictionary<string,object> args)
+        {
+            if (string.IsNullOrEmpty(query.Trim()))
+                return null;
+
+            using (var con = new SQLiteConnection("Data Source=DBFlowers.db"))
+            {
+                con.Open();
+                using (var cmd = new SQLiteCommand(query, con))
+                {
+                    foreach (KeyValuePair<string, object> entry in args)
+                    {
+                        cmd.Parameters.AddWithValue(entry.Key, entry.Value);
+                    }
+
+                    var da = new SQLiteDataAdapter(cmd);
+
+                    var dt = new DataTable();
+                    da.Fill(dt);
+
+                    da.Dispose();
+                    return dt;
+                }
+            }
+        }
+		//Добавление элемента
+        private int AddProduct(Products product)
+		{
+			const string query = "INSERT INTO Products(Image, Text,Price) VALUES(@Image, @Text,@Price)";
+
+			var args = new Dictionary<string, object>
+	{
+		{"@Image", product.Image},
+		{"@Text", product.Text},
+		{"@Price",product.Price }
+	};
+
+			return ExecuteWrite(query, args);
+		}
+		//Изменение элемента по ID
+		private int EditProduct(Products product)
+		{
+			const string query = "UPDATE Products SET Image = @Image, Text = @Text, Price = @Price WHERE Id = @id";
+
+			var args = new Dictionary<string, object>
+	{
+		{"@id", product.Id},
+		{"@Text", product.Text},
+		{"@Image", product.Image},
+		{"@Price", product.Price }
+	};
+
+			return ExecuteWrite(query, args);
+		}
+		//Удаление элемента по ID
+		private int DeleteProduct(Products product)
+		{
+			const string query = "Delete from Products WHERE Id = @id";
+
+			var args = new Dictionary<string, object>
+	{
+		{"@id", product.Id}
+	};
+
+			return ExecuteWrite(query, args);
+		}
+		//Получение элемента по ID
+		private Products GetProductById(int id)
+		{
+			var query = "SELECT * FROM Products WHERE Id = @id";
+
+			var args = new Dictionary<string, object>
+	{
+		{"@id", id}
+	};
+
+			DataTable dt = ExecuteRead(query, args);
+
+			if (dt == null || dt.Rows.Count == 0)
+			{
+				return null;
+			}
+
+			var product = new Products
+			{
+				Id = Convert.ToInt32(dt.Rows[0]["Id"]),
+				Image = Convert.ToString(dt.Rows[0]["Image"]),
+				Text = Convert.ToString(dt.Rows[0]["Text"]),
+				Price = Convert.ToString(dt.Rows[0]["Price"])
+			};
+			return product;
+		}
+
+		
+		
 	}
+
+	
 }
 
