@@ -21,6 +21,9 @@ namespace BotFFlowers
 		
 		
 		Random random = new Random();
+		//Instagram Temp
+		public int Insta_temp { get; set; }
+		
 		//Мэйн бот
 		private static TelegramBotClient BotGen = new TelegramBotClient("5249074040:AAGjwQxQHo17Ut6ychH50QMHmgEwyndUbZo");
 		//Бот отправкм заказов в приватный канал
@@ -55,8 +58,8 @@ namespace BotFFlowers
 		[Action("/start", "Меню")]
 		public void Start()
         {
-	       
-			if(ChatId.ToString().Equals(admin_chatid))
+			//Проверка на админа
+			if (ChatId.ToString().Equals(admin_chatid))
             {
 				PushL($"✋ Привет, {Context.GetUserFullName()}!\n\n⚪ <b>Панель админа + CMS</b>");
 				RowButton("💁 Режим обычного пользователя",Q(StartAdmin));
@@ -79,7 +82,7 @@ namespace BotFFlowers
 				RowButton("🎂 9. Торты", Q(PressCakes));
 				RowButton("🍏 10. Фрукты", Q(PressFruits));
 				RowButton("🗾 11. Открытки", Q(PressPostcards));
-				RowButton("🔥 12. Instagram");
+				RowButton("🔥 12. Instagram",Q(Instagram));
 				RowButton("⭐ Наши оценки", Q(PressRate));
 				RowButton("🛒 Корзина", Q(PressMainBasket));
 				Button("🚚 Доставка", Q(PressDelivery));
@@ -88,6 +91,25 @@ namespace BotFFlowers
 			}						
 		}
 		//Админ действие
+		[Action]
+		public async void Instagram()
+        {
+			
+			
+			SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
+			DB.Open();
+			SQLiteCommand create = DB.CreateCommand();
+			create.CommandText = "SELECT * FROM Products";
+			SQLiteDataReader reader = create.ExecuteReader();
+			while (reader.Read())
+			{
+				
+				SendPhoto(reader["Image"].ToString(),reader["Text"].ToString(),reader["Price"].ToString());
+			}
+			DB.Close();
+		}
+
+		
 		[Action]
 		public void StartAdmin()
         {
@@ -103,7 +125,7 @@ namespace BotFFlowers
 			RowButton("🎂 9. Торты", Q(PressCakes));
 			RowButton("🍏 10. Фрукты", Q(PressFruits));
 			RowButton("🗾 11. Открытки", Q(PressPostcards));
-			RowButton("🔥 12. Instagram");
+			RowButton("🔥 12. Instagram",Q(Instagram));
 			RowButton("⭐ Наши оценки", Q(PressRate));
 			RowButton("🛒 Корзина", Q(PressMainBasket));
 			Button("🚚 Доставка", Q(PressDelivery));
@@ -520,7 +542,19 @@ namespace BotFFlowers
 			);
 			PushL("Добавь фото товара:");
 			await Send();
-			temp_cms.Img = await AwaitText();
+			var update = await AwaitNextUpdate();
+			if (update.Update.Type == UpdateType.Message && update.Update.Message.Type == MessageType.Photo)
+					{
+				//temp_cms.Img = update.Update.Message.Document.FileId;
+				temp_cms.Img = update.Update.Message.Photo[update.Update.Message.Photo.Length - 1].FileId;
+
+
+					}
+			else
+            {
+				await Client.SendTextMessageAsync(ChatId, "❌ Ошибка! Повторите еще раз!");
+				Start();
+            }
 			PushL("Добавь название товара:");
 			await Send();
 			temp_cms.Text = await AwaitText();
@@ -553,7 +587,8 @@ namespace BotFFlowers
 					InlineKeyboardButton.WithCallbackData(text: "❌ Отмена", callbackData: Q(Start)),
 				}
 			);
-			await Client.SendTextMessageAsync(ChatId, $"Картинка {temp_cms.Img}\nТекст{temp_cms.Text}\nЦена{temp_cms.Price}", replyMarkup: add_markup);
+			//await Client.SendTextMessageAsync(ChatId, $"Картинка {temp_cms.Img}\nТекст{temp_cms.Text}\nЦена{temp_cms.Price}", replyMarkup: add_markup);
+			await Client.SendPhotoAsync(ChatId, temp_cms.Img,caption:$"<b>{temp_cms.Text}</b>\n\nЦена: {temp_cms.Price} ₽\n\n🚚 Доставка или самовывоз",ParseMode.Html);
 		}
 
 		
@@ -575,7 +610,18 @@ namespace BotFFlowers
 			var new_product = new Products();
 			PushL("Новое фото товара:");
 			await Send();
-			new_product.Image = await AwaitText();
+			var update = await AwaitNextUpdate();
+			if (update.Update.Type == UpdateType.Message && update.Update.Message.Type == MessageType.Photo)
+			{
+				new_product.Image = update.Update.Message.Photo[update.Update.Message.Photo.Length - 1].FileId;
+
+			}
+			else
+			{
+				await Client.SendTextMessageAsync(ChatId, "❌ Ошибка! Повторите еще раз!");
+				Start();
+			}
+
 			PushL("Новое название товара:");
 			await Send();
 			new_product.Text = await AwaitText();
@@ -741,7 +787,7 @@ namespace BotFFlowers
 			while (reader.Read())
             {
 				Temp_id = Convert.ToInt32(reader["Id"]);
-				await Client.SendTextMessageAsync(ChatId,$"ID{reader["Id"]}\nИзображение{reader["Image"]} \nТекст{reader["Text"]}\nЦена{reader["Price"]}");		
+				await Client.SendPhotoAsync(ChatId, reader["Image"].ToString(), caption: $"ID:{reader["Id"]}\n<b>{reader["Text"]}</b>\n\nЦена: {reader["Price"]} ₽\n\n🚚 Доставка или самовывоз", ParseMode.Html);
 			}
 			DB.Close();
 		}
