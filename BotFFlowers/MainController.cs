@@ -19,7 +19,7 @@ namespace BotFFlowers
 	public class MainController : BotController
 	{
 		
-		public int Temp_id { get; set; }
+		
 		Random random = new Random();
 		//Мэйн бот
 		private static TelegramBotClient BotGen = new TelegramBotClient("5249074040:AAGjwQxQHo17Ut6ychH50QMHmgEwyndUbZo");
@@ -36,6 +36,7 @@ namespace BotFFlowers
 		private static Customer customer_info = new Customer();
 		//CMS временное
 		private static NewCMS temp_cms = new NewCMS();
+		public int Temp_id { get; set; }
 		//Парсинг
 		string baseurl = "https://flowerskamensk.ru/products/category/";
 		string header_tulps = "tulpany";
@@ -61,8 +62,8 @@ namespace BotFFlowers
 				RowButton("💁 Режим обычного пользователя",Q(StartAdmin));
 				RowButton("🗾 Показать товары",Q(ReadTable));
 				RowButton("✅ Добавить товар",Q(CMS_ADD));					
-				RowButton("🤝 Удалить товар",Q(CMS_DELETE));
-				RowButton("🤝 Изменить товар", Q(Edit_product));
+				RowButton("❌ Удалить товар", Q(CMS_DELETE));
+				RowButton("📱 Изменить товар", Q(Edit_product));
 			}
 			else
             {
@@ -562,8 +563,8 @@ namespace BotFFlowers
 			InlineKeyboardMarkup removeItem = new(
 					new[]
 			{
-				InlineKeyboardButton.WithCallbackData(text: "❌ Список товаров", callbackData: Q(ReadTable)),
-				InlineKeyboardButton.WithCallbackData(text: "❌ Меню", callbackData: Q(Start)),
+				InlineKeyboardButton.WithCallbackData(text: "📱 Список товаров", callbackData: Q(ReadTable)),
+				InlineKeyboardButton.WithCallbackData(text: "⏪ Меню", callbackData: Q(Start)),
 			}
 
 		);
@@ -594,8 +595,8 @@ namespace BotFFlowers
 			InlineKeyboardMarkup removeItem = new(
 					new[]
 			{
-				InlineKeyboardButton.WithCallbackData(text: "❌ Список товаров", callbackData: Q(ReadTable)),
-				InlineKeyboardButton.WithCallbackData(text: "❌ Меню", callbackData: Q(Start)),
+				InlineKeyboardButton.WithCallbackData(text: "📱 Список товаров", callbackData: Q(ReadTable)),
+				InlineKeyboardButton.WithCallbackData(text: "⏪ Меню", callbackData: Q(Start)),
 			}
 
 		);
@@ -604,7 +605,7 @@ namespace BotFFlowers
 			string ID = await AwaitText();
 			int id = Convert.ToInt32(ID);
 			DeleteProduct(id);
-			await Client.SendTextMessageAsync(ChatId, "Товар удален!", replyMarkup: removeItem);
+			await Client.SendTextMessageAsync(ChatId, "✅ Товар удален!", replyMarkup: removeItem);
 			
 
 		}
@@ -740,8 +741,7 @@ namespace BotFFlowers
 			while (reader.Read())
             {
 				Temp_id = Convert.ToInt32(reader["Id"]);
-				await Client.SendTextMessageAsync(ChatId,$"ID{reader["Id"]}\nИзображение{reader["Image"]} \nТекст{reader["Text"]}\nЦена{reader["Price"]}");
-				
+				await Client.SendTextMessageAsync(ChatId,$"ID{reader["Id"]}\nИзображение{reader["Image"]} \nТекст{reader["Text"]}\nЦена{reader["Price"]}");		
 			}
 			DB.Close();
 		}
