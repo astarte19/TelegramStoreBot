@@ -12,15 +12,14 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types.Enums;
 using System.Data.SQLite;
 using System.Data;
-using Microsoft.Data.Sqlite;
+
 
 namespace BotFFlowers
 {
 	public class MainController : BotController
 	{
-		//БД
-		public static SQLiteConnection DB;
-
+		
+		public int Temp_id { get; set; }
 		Random random = new Random();
 		//Мэйн бот
 		private static TelegramBotClient BotGen = new TelegramBotClient("5249074040:AAGjwQxQHo17Ut6ychH50QMHmgEwyndUbZo");
@@ -60,9 +59,10 @@ namespace BotFFlowers
             {
 				PushL($"✋ Привет, {Context.GetUserFullName()}!\n\n⚪ <b>Панель админа + CMS</b>");
 				RowButton("💁 Режим обычного пользователя",Q(StartAdmin));
-				RowButton("🗾 Показать товары",Q(Check_all));
+				RowButton("🗾 Показать товары",Q(ReadTable));
 				RowButton("✅ Добавить товар",Q(CMS_ADD));					
-				RowButton("🤝 Доступ к CMS ");
+				RowButton("🤝 Удалить товар",Q(CMS_DELETE));
+				RowButton("🤝 Изменить товар", Q(Edit_product));
 			}
 			else
             {
@@ -497,17 +497,7 @@ namespace BotFFlowers
 		}
 
 		//Просмотр всех товаров
-		[Action]
-		public async void Check_all()
-		{
-			InlineKeyboardMarkup removeItem = new(
-					new[]
-			{
-				InlineKeyboardButton.WithCallbackData(text: "❌ Удалить", callbackData: Q(Start)),
-			}
-
-		);
-		}
+		
 		//Формировка карточки
 		[Action]
 		public async Task Add_product()
@@ -569,7 +559,18 @@ namespace BotFFlowers
 		[Action]
 		public async Task Edit_product()
         {
-			int id = 5;
+			InlineKeyboardMarkup removeItem = new(
+					new[]
+			{
+				InlineKeyboardButton.WithCallbackData(text: "❌ Список товаров", callbackData: Q(ReadTable)),
+				InlineKeyboardButton.WithCallbackData(text: "❌ Меню", callbackData: Q(Start)),
+			}
+
+		);
+			PushL("Введите ID товара, который хотите изменить:");
+			await Send();
+			string ID = await AwaitText();
+			int id = Convert.ToInt32(ID);
 			var new_product = new Products();
 			PushL("Новое фото товара:");
 			await Send();
@@ -582,17 +583,29 @@ namespace BotFFlowers
 			new_product.Price = await AwaitText();
 			new_product.Id = id;
 			EditProduct(new_product);
-			await Client.SendTextMessageAsync(ChatId, "✅ Карточка товара изменена!", ParseMode.Html);
+			await Client.SendTextMessageAsync(ChatId, "✅ Карточка товара изменена!", ParseMode.Html, replyMarkup: removeItem);
 		}
 		
 		
 		//Удалить товар
 		[Action]
-		public async void CMS_DELETE()
+		public async Task CMS_DELETE()
         {
-			var product = new Products();
-			product.Id = 2;
-			DeleteProduct(product);
+			InlineKeyboardMarkup removeItem = new(
+					new[]
+			{
+				InlineKeyboardButton.WithCallbackData(text: "❌ Список товаров", callbackData: Q(ReadTable)),
+				InlineKeyboardButton.WithCallbackData(text: "❌ Меню", callbackData: Q(Start)),
+			}
+
+		);
+			PushL("Введите ID товара, который хотите удалить:");
+			await Send();
+			string ID = await AwaitText();
+			int id = Convert.ToInt32(ID);
+			DeleteProduct(id);
+			await Client.SendTextMessageAsync(ChatId, "Товар удален!", replyMarkup: removeItem);
+			
 
 		}
 		
@@ -675,17 +688,19 @@ namespace BotFFlowers
 			return ExecuteWrite(query, args);
 		}
 		//Удаление элемента по ID
-		private int DeleteProduct(Products product)
+		
+		private int DeleteProduct(int id)
 		{
 			const string query = "Delete from Products WHERE Id = @id";
 
 			var args = new Dictionary<string, object>
 	{
-		{"@id", product.Id}
+		{"@id", id}
 	};
-
+			
 			return ExecuteWrite(query, args);
 		}
+		
 		//Получение элемента по ID
 		private Products GetProductById(int id)
 		{
@@ -712,7 +727,24 @@ namespace BotFFlowers
 			};
 			return product;
 		}
-
+		[Action]
+		private async void ReadTable()
+        {
+			
+			
+			SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
+			DB.Open();
+			SQLiteCommand create = DB.CreateCommand();
+			create.CommandText = "SELECT * FROM Products";
+			SQLiteDataReader reader = create.ExecuteReader();
+			while (reader.Read())
+            {
+				Temp_id = Convert.ToInt32(reader["Id"]);
+				await Client.SendTextMessageAsync(ChatId,$"ID{reader["Id"]}\nИзображение{reader["Image"]} \nТекст{reader["Text"]}\nЦена{reader["Price"]}");
+				
+			}
+			DB.Close();
+		}
 		
 		
 	}
