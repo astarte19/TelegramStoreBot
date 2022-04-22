@@ -94,8 +94,8 @@ namespace BotFFlowers
 		[Action]
 		public async void Instagram()
         {
-			
-			
+
+		
 			SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
 			DB.Open();
 			SQLiteCommand create = DB.CreateCommand();
@@ -104,7 +104,7 @@ namespace BotFFlowers
 			while (reader.Read())
 			{
 				
-				SendPhoto(reader["Image"].ToString(),reader["Text"].ToString(),reader["Price"].ToString());
+				SendPhoto(reader["Image"].ToString(),reader["Text"].ToString(),reader["Price"].ToString() + " ₽");
 			}
 			DB.Close();
 		}
@@ -444,6 +444,7 @@ namespace BotFFlowers
 		[Action]
 			public void PushItem(string _header, int from_price, int to_price)
 			{
+			Client.SendTextMessageAsync(ChatId, "⏳ Загрузка товаров...", ParseMode.Html);
 				ParseItem(baseurl + _header);
 				for (int i = 0; i < prices.Count; i++)
 				{
@@ -777,19 +778,38 @@ namespace BotFFlowers
 		[Action]
 		private async void ReadTable()
         {
-			
-			
-			SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
-			DB.Open();
-			SQLiteCommand create = DB.CreateCommand();
-			create.CommandText = "SELECT * FROM Products";
-			SQLiteDataReader reader = create.ExecuteReader();
-			while (reader.Read())
-            {
-				Temp_id = Convert.ToInt32(reader["Id"]);
-				await Client.SendPhotoAsync(ChatId, reader["Image"].ToString(), caption: $"ID:{reader["Id"]}\n<b>{reader["Text"]}</b>\n\nЦена: {reader["Price"]} ₽\n\n🚚 Доставка или самовывоз", ParseMode.Html);
+			SQLiteConnection check_connection = new SQLiteConnection("Data Source=DBFlowers.db;");
+			check_connection.Open();
+			SQLiteCommand check_command = check_connection.CreateCommand();
+			check_command.CommandText = "SELECT count(rowid) FROM Products"; 
+			check_command.ExecuteNonQuery();
+			int countRows = (int)(long)check_command.ExecuteScalar();
+			check_connection.Close();
+			if (countRows == 0)
+			{
+				await Client.SendTextMessageAsync(ChatId, "❌ Товаров нет! Зайди и добавь!", ParseMode.Html);
 			}
-			DB.Close();
+			else
+            {
+				SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
+				DB.Open();
+				SQLiteCommand create = DB.CreateCommand();
+				create.CommandText = "SELECT * FROM Products";
+				SQLiteDataReader reader = create.ExecuteReader();
+
+				while (reader.Read())
+				{
+
+
+					Temp_id = Convert.ToInt32(reader["Id"]);
+					await Client.SendPhotoAsync(ChatId, reader["Image"].ToString(), caption: $"ID:{reader["Id"]}\n<b>{reader["Text"]}</b>\n\nЦена: {reader["Price"]} ₽\n\n🚚 Доставка или самовывоз", ParseMode.Html);
+
+
+				}
+				DB.Close();
+			}
+
+			
 		}
 		
 		
