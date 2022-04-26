@@ -24,12 +24,12 @@ namespace BotFFlowers
 		//Instagram Temp
 		public int Insta_temp { get; set; }
 		
-		//Мэйн бот
-		private static TelegramBotClient BotGen = new TelegramBotClient("5249074040:AAGjwQxQHo17Ut6ychH50QMHmgEwyndUbZo");
 		//Бот отправкм заказов в приватный канал
 		private static TelegramBotClient Notif = new TelegramBotClient("5213399849:AAHa_-r0-xgtplHmaMro9m8jmQ88qe8Nk8w");
 		//Админ ChatID
 		private static string admin_chatid = "387549112";
+
+		private static string admin_chatid2 = "727043884";
 		//Постройка товара
 		private List<string> prices = new List<string>();
 		private List<string> titles = new List<string>();
@@ -40,10 +40,12 @@ namespace BotFFlowers
 		//CMS временное
 		private static NewCMS temp_cms = new NewCMS();
 		public int Temp_id { get; set; }
+		
 		//Парсинг
 		string baseurl = "https://flowerskamensk.ru/products/category/";
 		string header_tulps = "tulpany";
 		string header_roses = "rossiyskie-rozy";
+		 string header_equadorroses = "gollandskie-rozy";
 		string header_boxes = "cveti-v-korobkah";
 		string header_bouqets = "bukety";
 		string header_baskets = "korziny";
@@ -53,13 +55,18 @@ namespace BotFFlowers
 		string header_cakes = "torty";
 		string header_fruits = "frukty-v-korzine";
 		string header_postcards = "otkrytki";
-		
-		
+		readonly ILogger<MainController> _logger;
+		public MainController(ILogger<MainController> logger)
+		{
+			
+			_logger = logger;
+			
+		}
 		[Action("/start", "Меню")]
 		public void Start()
         {
 			//Проверка на админа
-			if (ChatId.ToString().Equals(admin_chatid))
+			if (ChatId.ToString().Equals(admin_chatid) || ChatId.ToString().Equals(admin_chatid2))
             {
 				PushL($"✋ Привет, {Context.GetUserFullName()}!\n\n⚪ <b>Панель админа + CMS</b>");
 				RowButton("💁 Режим обычного пользователя",Q(StartAdmin));
@@ -73,16 +80,17 @@ namespace BotFFlowers
 				PushL($"✋ <b>Привет, {Context.GetUserFullName()}!</b>\n🌷 <b>Городские цветы Каменск-Шахтинский</b> \n🟢 Самые свежие цветы и букеты! \n🟢 Более 8 лет опыта и репутации! \n🟢 Наш <i>telegram</i> канал: <a href='https://t.me/gorodskie_cveti_kamensk'>Городские Цветы Каменск</a>");
 				RowButton("🌷 1. Тюльпаны", Q(PressTulps));
 				RowButton("🌹 2. Российские Розы", Q(PressRURoses));
-				RowButton("🌸 3. Цветы в коробках", Q(PressBoxes));
-				RowButton("💐 4. Букеты", Q(PressBouqets));
-				RowButton("🧺 5. Корзины", Q(PressBaskets));
-				RowButton("🧸 6. Мягкие игрушки", Q(PressToys));
-				RowButton("🎈 7. Воздушные шары", Q(PressBallons));
-				RowButton("🍬 8. Конфеты", Q(PressCandy));
-				RowButton("🎂 9. Торты", Q(PressCakes));
-				RowButton("🍏 10. Фрукты", Q(PressFruits));
-				RowButton("🗾 11. Открытки", Q(PressPostcards));
-				RowButton("🔥 12. Instagram",Q(Instagram));
+				RowButton("🌹 3. Эквадорские Розы", Q(PressEQRoses));
+				RowButton("🌸 4. Цветы в коробках", Q(PressBoxes));
+				RowButton("💐 5. Букеты", Q(PressBouqets));
+				RowButton("🧺 6. Корзины", Q(PressBaskets));
+				RowButton("🧸 7. Мягкие игрушки", Q(PressToys));
+				RowButton("🎈 8. Воздушные шары", Q(PressBallons));
+				RowButton("🍬 9. Конфеты", Q(PressCandy));
+				RowButton("🎂 10. Торты", Q(PressCakes));
+				RowButton("🍏 11. Фрукты", Q(PressFruits));
+				RowButton("🗾 12. Открытки", Q(PressPostcards));
+				RowButton("🔥 13. Instagram",Q(Instagram));
 				RowButton("⭐ Наши оценки", Q(PressRate));
 				RowButton("🛒 Корзина", Q(PressMainBasket));
 				Button("🚚 Доставка", Q(PressDelivery));
@@ -94,17 +102,16 @@ namespace BotFFlowers
 		[Action]
 		public async void Instagram()
         {
-
-		
-			SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
+	        
+	        SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
 			DB.Open();
 			SQLiteCommand create = DB.CreateCommand();
 			create.CommandText = "SELECT * FROM Products";
 			SQLiteDataReader reader = create.ExecuteReader();
 			while (reader.Read())
 			{
-				
 				SendPhoto(reader["Image"].ToString(),reader["Text"].ToString(),reader["Price"].ToString() + " ₽");
+				//await Client.SendPhotoAsync(ChatId, photo: reader["Image"].ToString(), caption: $"<b>{reader["Text"].ToString()}</b>\n\nЦена: {reader["Price"].ToString()} ₽\n\n🚚 Доставка или самовывоз", ParseMode.Html);
 			}
 			DB.Close();
 		}
@@ -116,16 +123,17 @@ namespace BotFFlowers
 			PushL($"✋ <b>Привет, {Context.GetUserFullName()}!</b>\n🌷 <b>Городские цветы Каменск-Шахтинский</b> \n🟢 Самые свежие цветы и букеты! \n🟢 Более 8 лет опыта и репутации! \n🟢 Наш <i>telegram</i> канал: <a href='https://t.me/gorodskie_cveti_kamensk'>Городские Цветы Каменск</a>");
 			RowButton("🌷 1. Тюльпаны", Q(PressTulps));
 			RowButton("🌹 2. Российские Розы", Q(PressRURoses));
-			RowButton("🌸 3. Цветы в коробках", Q(PressBoxes));
-			RowButton("💐 4. Букеты", Q(PressBouqets));
-			RowButton("🧺 5. Корзины", Q(PressBaskets));
-			RowButton("🧸 6. Мягкие игрушки", Q(PressToys));
-			RowButton("🎈 7. Воздушные шары", Q(PressBallons));
-			RowButton("🍬 8. Конфеты", Q(PressCandy));
-			RowButton("🎂 9. Торты", Q(PressCakes));
-			RowButton("🍏 10. Фрукты", Q(PressFruits));
-			RowButton("🗾 11. Открытки", Q(PressPostcards));
-			RowButton("🔥 12. Instagram",Q(Instagram));
+			RowButton("🌹 3. Эквадорские Розы", Q(PressEQRoses));
+			RowButton("🌸 4. Цветы в коробках", Q(PressBoxes));
+			RowButton("💐 5. Букеты", Q(PressBouqets));
+			RowButton("🧺 6. Корзины", Q(PressBaskets));
+			RowButton("🧸 7. Мягкие игрушки", Q(PressToys));
+			RowButton("🎈 8. Воздушные шары", Q(PressBallons));
+			RowButton("🍬 9. Конфеты", Q(PressCandy));
+			RowButton("🎂 10. Торты", Q(PressCakes));
+			RowButton("🍏 11. Фрукты", Q(PressFruits));
+			RowButton("🗾 12. Открытки", Q(PressPostcards));
+			RowButton("🔥 13. Instagram",Q(Instagram));
 			RowButton("⭐ Наши оценки", Q(PressRate));
 			RowButton("🛒 Корзина", Q(PressMainBasket));
 			Button("🚚 Доставка", Q(PressDelivery));
@@ -155,8 +163,19 @@ namespace BotFFlowers
 			RowButton("🟩 От 1600 До 2500 рублей 🟩", Q(PushItem,header_roses,1600,2500));
 			RowButton("🟩 От 2500 До 3500 рублей 🟩", Q(PushItem,header_roses,2500,3500));
 			RowButton("🟩 От 3500 До 5000 рублей 🟩", Q(PushItem,header_roses,3500,5000));
-			RowButton("🟩 5000 рублей и выше 🟩", Q(PushItem,header_roses,5000,50000));
+			RowButton("🟩 5000 рублей и выше 🟩", Q(PushItem,header_roses,5000,999999));
         }
+
+		[Action]
+		public void PressEQRoses()
+		{
+			PushL("<b>Ценовые категории:</b>");
+			RowButton("⏪ Назад", Q(Start));
+			RowButton("🟩 От 1700 До 2500 рублей 🟩", Q(PushItem,header_equadorroses,1700,2500));
+			RowButton("🟩 От 2500 До 3500 рублей 🟩", Q(PushItem,header_equadorroses,2500,3500));
+			RowButton("🟩 От 3500 До 5000 рублей 🟩", Q(PushItem,header_equadorroses,3500,5000));
+			RowButton("🟩 5000 рублей и выше 🟩", Q(PushItem,header_equadorroses,5000,999999));
+		}
 		//Цветы в коробках
 		[Action]
 		public void PressBoxes()
@@ -166,7 +185,7 @@ namespace BotFFlowers
 			RowButton("🟩 От 1600 До 2500 рублей 🟩", Q(PushItem,header_boxes,1600,2500));
 			RowButton("🟩 От 2500 До 3500 рублей 🟩", Q(PushItem,header_boxes,2500,3500));
 			RowButton("🟩 От 3500 До 5000 рублей 🟩", Q(PushItem,header_boxes,3500,5000));
-			RowButton("🟩 5000 рублей и выше 🟩", Q(PushItem,header_boxes,5000,50000));
+			RowButton("🟩 5000 рублей и выше 🟩", Q(PushItem,header_boxes,5000,999999));
         }
 		//Букеты
 		[Action]
@@ -178,7 +197,7 @@ namespace BotFFlowers
 			RowButton("🟩 От 1500 До 2500 рублей 🟩", Q(PushItem,header_bouqets,1500,2500));
 			RowButton("🟩 От 2500 До 3500 рублей 🟩", Q(PushItem,header_bouqets,2500,3500));
 			RowButton("🟩 От 3500 До 5000 рублей 🟩", Q(PushItem,header_bouqets,3500,5000));
-			RowButton("🟩 5000 рублей и выше 🟩", Q(PushItem,header_bouqets,5000,50000));
+			RowButton("🟩 5000 рублей и выше 🟩", Q(PushItem,header_bouqets,5000,999999));
         }
 		//Корзины
 		[Action]
@@ -189,7 +208,7 @@ namespace BotFFlowers
 			RowButton("🟩 До 2500 рублей 🟩", Q(PushItem,header_baskets,0,2500));
 			RowButton("🟩 От 2500 До 4000 рублей 🟩", Q(PushItem,header_baskets,2500,4000));
 			RowButton("🟩 От 4000 До 7000 рублей 🟩", Q(PushItem,header_baskets,4000,7000));
-			RowButton("🟩 7000 рублей и выше 🟩", Q(PushItem,header_baskets,7000,50000));
+			RowButton("🟩 7000 рублей и выше 🟩", Q(PushItem,header_baskets,7000,999999));
         }
 		//Мягкие игрушки
 		[Action]
@@ -197,7 +216,7 @@ namespace BotFFlowers
 		{
 			PushL("<b>Категории:</b>");
 			RowButton("⏪ Назад", Q(Start));
-			RowButton("🧸 Показать товары", Q(PushItem,header_toys,0,50000));
+			RowButton("🧸 Показать товары", Q(PushItem,header_toys,0,999999));
 		}
 		//Воздушные шары
 		[Action]
@@ -205,7 +224,7 @@ namespace BotFFlowers
 		{
 			PushL("<b>Категории:</b>");
 			RowButton("⏪ Назад", Q(Start));
-			RowButton("🎈 Показать товары", Q(PushItem,header_baloons,0,50000));
+			RowButton("🎈 Показать товары", Q(PushItem,header_baloons,0,999999));
 		}
 		//Конфеты
 		[Action]
@@ -213,7 +232,7 @@ namespace BotFFlowers
 		{
 			PushL("<b>Категории:</b>");
 			RowButton("⏪ Назад", Q(Start));
-			RowButton("🍬 Показать товары", Q(PushItem,header_candy,0,50000));
+			RowButton("🍬 Показать товары", Q(PushItem,header_candy,0,999999));
 		}
 		[Action]
 		//Торты
@@ -221,7 +240,7 @@ namespace BotFFlowers
         {
 			PushL("<b>Категории:</b>");
 			RowButton("⏪ Назад", Q(Start));
-			RowButton("🎂 Показать товары", Q(PushItem,header_cakes,0,50000));
+			RowButton("🎂 Показать товары", Q(PushItem,header_cakes,0,999999));
         }
 		//Фрукты
 		[Action]
@@ -229,7 +248,7 @@ namespace BotFFlowers
 		{
 			PushL("<b>Категории:</b>");
 			RowButton("⏪ Назад", Q(Start));
-			RowButton("🍏 Показать товары", Q(PushItem,header_fruits,0,50000));
+			RowButton("🍏 Показать товары", Q(PushItem,header_fruits,0,999999));
 		}
 		//Открытки
 		[Action]
@@ -237,7 +256,7 @@ namespace BotFFlowers
 		{
 			PushL("<b>Категории:</b>");
 			RowButton("⏪ Назад", Q(Start));
-			RowButton("🗾 Показать товары", Q(PushItem,header_postcards,0,50000));
+			RowButton("🗾 Показать товары", Q(PushItem,header_postcards,0,999999));
 		}
 		//Стоимость доставки
 		[Action]
@@ -302,11 +321,12 @@ namespace BotFFlowers
 				int total = 0;
 				for (int i = 0; i < shop_cart.Count; i++)
 				{
+					id = i;
 					await Client.SendTextMessageAsync(ChatId, $"⭐ {shop_cart.ElementAt(i).Name} : {shop_cart.ElementAt(i).Price}", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: delete_cart);
 					string check = new string(shop_cart.ElementAt(i).Price.Where(t => char.IsDigit(t)).ToArray());
 					int price = Convert.ToInt32(check);
 					total_list.Add(price);
-					id = i;
+					
 				}
 				foreach (var i in total_list)
 				{
@@ -367,7 +387,7 @@ namespace BotFFlowers
 
 		
 		//Постинг товаров
-		public  void SendPhoto(string _imgurl,string  _itemname, string _price)
+		public async Task SendPhoto(string _imgurl,string  _itemname, string _price)
 		{
 			InlineKeyboardMarkup inlineKeyboard = new(
 				new[]
@@ -375,7 +395,7 @@ namespace BotFFlowers
 				InlineKeyboardButton.WithCallbackData(text: "🛒 В корзину", callbackData: Q(CallData,_itemname,_price)),
 			}
 			);
-			Client.SendPhotoAsync(ChatId,_imgurl,$"<b>{_itemname}</b>\n\nЦена: {_price}\n\n🚚 Доставка или самовывоз", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: inlineKeyboard);
+			 await Client.SendPhotoAsync(ChatId,_imgurl,$"<b>{_itemname}</b>\n\nЦена: {_price}\n\n🚚 Доставка или самовывоз", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: inlineKeyboard);
 		}
 
 		//Обработка сообщений пользователя и постройка уведомления нового заказа
@@ -411,8 +431,7 @@ namespace BotFFlowers
 			{
 				InlineKeyboardButton.WithCallbackData(text: "⏪ Меню", callbackData: Q(Start)),
 			}
-
-		);
+				);
 				//Увед в приватный канал
 				await Client.SendTextMessageAsync(ChatId, "✅ <b>Заказ оформлен!</b>\nВ ближайшее время с вами свяжется менеджер для подтверждения заказа!", ParseMode.Html,replyMarkup: back_menu);
 				string ID_ORDER = random.Next(500000).ToString();
@@ -442,19 +461,43 @@ namespace BotFFlowers
 
 		//Сортировка и отправка
 		[Action]
-			public void PushItem(string _header, int from_price, int to_price)
+			public async Task PushItem(string _header, int from_price, int to_price)
 			{
-			Client.SendTextMessageAsync(ChatId, "⏳ Загрузка товаров...", ParseMode.Html);
+				string name_item = "";
+				string price_item = "";
+				Client.SendTextMessageAsync(ChatId, "⏳ Загрузка товаров...", ParseMode.Html);
 				ParseItem(baseurl + _header);
+				InlineKeyboardMarkup inlineKeyboard = new(
+					new[]
+					{
+						InlineKeyboardButton.WithCallbackData(text: "🛒 В корзину", callbackData: Q(CallData,"Товар","1337")),
+					}
+				);
 				for (int i = 0; i < prices.Count; i++)
 				{
 					string check = new string(prices.ElementAt(i).Where(t => char.IsDigit(t)).ToArray());
 					int price = Convert.ToInt32(check);
 					if (price >= from_price && price <= to_price)
 					{
-						SendPhoto(urls.ElementAt(i), titles.ElementAt(i), prices.ElementAt(i));
-					
+						name_item = titles.ElementAt(i);
+						price_item = prices.ElementAt(i);
+						await Client.SendPhotoAsync(ChatId,urls.ElementAt(i),$"<b>{titles.ElementAt(i)}</b>\n\nЦена: {prices.ElementAt(i)}\n\n🚚 Доставка или самовывоз", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: inlineKeyboard);
+						//SendPhoto(urls.ElementAt(i), titles.ElementAt(i), prices.ElementAt(i));
 					}
+				}
+			}
+
+			[On(Handle.Exception)]
+			public async Task OnException(Exception e)
+			{
+				_logger.LogError(e, "Unhandled exception");
+				if (Context.Update.Type == UpdateType.CallbackQuery)
+				{
+					await AnswerCallback("Error");
+				}
+				else if (Context.Update.Type == UpdateType.Message)
+				{
+					Push("Error");
 				}
 			}
 		//Исключение
@@ -473,8 +516,6 @@ namespace BotFFlowers
 				OverrideEncoding = Encoding.UTF8,
 			};
 			HD = web.Load(_baseurl);
-
-			
 			HtmlNodeCollection PricesElements = HD.DocumentNode.SelectNodes("//div[@class='product-item-price']");
 			HtmlNodeCollection TitlesElements = HD.DocumentNode.SelectNodes("//div[@class='product-item__link']//a");
 			HtmlNodeCollection UrlsElements = HD.DocumentNode.SelectNodes("//div[@class='product-item__content']//picture//img");
@@ -695,12 +736,9 @@ namespace BotFFlowers
                     {
                         cmd.Parameters.AddWithValue(entry.Key, entry.Value);
                     }
-
                     var da = new SQLiteDataAdapter(cmd);
-
                     var dt = new DataTable();
                     da.Fill(dt);
-
                     da.Dispose();
                     return dt;
                 }
@@ -758,14 +796,11 @@ namespace BotFFlowers
 	{
 		{"@id", id}
 	};
-
 			DataTable dt = ExecuteRead(query, args);
-
 			if (dt == null || dt.Rows.Count == 0)
 			{
 				return null;
 			}
-
 			var product = new Products
 			{
 				Id = Convert.ToInt32(dt.Rows[0]["Id"]),
@@ -796,25 +831,14 @@ namespace BotFFlowers
 				SQLiteCommand create = DB.CreateCommand();
 				create.CommandText = "SELECT * FROM Products";
 				SQLiteDataReader reader = create.ExecuteReader();
-
 				while (reader.Read())
 				{
-
-
 					Temp_id = Convert.ToInt32(reader["Id"]);
 					await Client.SendPhotoAsync(ChatId, reader["Image"].ToString(), caption: $"ID:{reader["Id"]}\n<b>{reader["Text"]}</b>\n\nЦена: {reader["Price"]} ₽\n\n🚚 Доставка или самовывоз", ParseMode.Html);
-
-
 				}
 				DB.Close();
 			}
-
-			
-		}
-		
-		
+        }
 	}
-
-	
 }
 
