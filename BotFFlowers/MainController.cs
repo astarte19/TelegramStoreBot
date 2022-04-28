@@ -463,30 +463,81 @@ namespace BotFFlowers
 		[Action]
 			public async Task PushItem(string _header, int from_price, int to_price)
 			{
-				string name_item = "";
-				string price_item = "";
-				Client.SendTextMessageAsync(ChatId, "⏳ Загрузка товаров...", ParseMode.Html);
+				
+				SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
+				await Send("⏳ Загрузка товаров...");
 				ParseItem(baseurl + _header);
-				InlineKeyboardMarkup inlineKeyboard = new(
-					new[]
-					{
-						InlineKeyboardButton.WithCallbackData(text: "🛒 В корзину", callbackData: Q(CallData,"Товар","1337")),
-					}
-				);
-				for (int i = 0; i < prices.Count; i++)
+				if (urls.Count == 0 && titles.Count == 0 & prices.Count == 0)
 				{
-					string check = new string(prices.ElementAt(i).Where(t => char.IsDigit(t)).ToArray());
-					int price = Convert.ToInt32(check);
-					if (price >= from_price && price <= to_price)
+					await Send("В данной категории товары закончились 🥺");
+				}
+				else
+				{
+					//Очистить бд-буфер
+					DB.Open();
+					SQLiteCommand clear = DB.CreateCommand();
+					clear.CommandText = "DELETE FROM Temp";
+					clear.ExecuteNonQuery();
+					DB.Close();
+					for (int i = 0; i < prices.Count; i++)
 					{
-						name_item = titles.ElementAt(i);
-						price_item = prices.ElementAt(i);
-						await Client.SendPhotoAsync(ChatId,urls.ElementAt(i),$"<b>{titles.ElementAt(i)}</b>\n\nЦена: {prices.ElementAt(i)}\n\n🚚 Доставка или самовывоз", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: inlineKeyboard);
-						//SendPhoto(urls.ElementAt(i), titles.ElementAt(i), prices.ElementAt(i));
+						string check = new string(prices.ElementAt(i).Where(t => char.IsDigit(t)).ToArray());
+						int price = Convert.ToInt32(check);
+						if (price >= from_price && price <= to_price)
+						{
+							//Уникальный ID, который я передаю в Callback, а потом вытаскиваю через него айтемы
+							string ID = Guid.NewGuid().ToString("N");
+							//Заполнить бд-буфер
+							DB.Open();
+							SQLiteCommand add = DB.CreateCommand();
+							add.CommandText = "INSERT INTO Temp VALUES(@ID, @Name,@Price)";
+							add.Parameters.AddWithValue("@ID", ID);
+							add.Parameters.AddWithValue("@Name", titles.ElementAt(i));
+							add.Parameters.AddWithValue("@Price", prices.ElementAt(i));
+							add.ExecuteNonQuery();
+							DB.Close();
+							InlineKeyboardMarkup inlineKeyboard = new(
+								new[]
+								{
+									InlineKeyboardButton.WithCallbackData(text: "🛒 В корзину", callbackData: Q(CallDataTest,ID)),
+								}
+							);
+							
+							await Client.SendPhotoAsync(ChatId,urls.ElementAt(i),$"<b>{titles.ElementAt(i)}</b>\n\nЦена: {prices.ElementAt(i)}\n\n🚚 Доставка или самовывоз", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: inlineKeyboard);
+						}
 					}
 				}
+				
+				
 			}
+//тест
+		[Action]
+		public async void CallDataTest(string id)
+		{
+			InlineKeyboardMarkup redirect_basket = new(
 
+				new[]
+				{
+					InlineKeyboardButton.WithCallbackData(text: "⏪ Меню", callbackData: Q(Start)),
+					InlineKeyboardButton.WithCallbackData(text: "🛒 К корзине", callbackData: Q(PressMainBasket)),
+				}
+
+			);
+			SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
+			DB.Open();
+			SQLiteCommand create = DB.CreateCommand();
+			create.CommandText = "SELECT * FROM Temp WHERE ID = @id";
+			create.Parameters.AddWithValue("@id", id);
+			SQLiteDataReader reader = create.ExecuteReader();
+			while (reader.Read())
+			{
+				shop_cart.Add(new Item(reader["Name"].ToString(),reader["Price"].ToString()));
+				await Client.SendTextMessageAsync(ChatId, $"✅ Товар {reader["Name"].ToString()} добавлен в корзину!", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: redirect_basket);
+			}
+			DB.Close();
+			
+		}
+//тест
 			[On(Handle.Exception)]
 			public async Task OnException(Exception e)
 			{

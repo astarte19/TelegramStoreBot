@@ -17,7 +17,7 @@
     <None Remove="Microsoft.EntityFrameworkCore.Tools" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Deployf.Botf" Version="0.8.0" />
+    <PackageReference Include="Deployf.Botf" Version="0.12.0" />
     <PackageReference Include="HtmlAgilityPack" Version="1.11.42" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="6.0.4" />
     <PackageReference Include="System.Data.SQLite" Version="1.0.115.5" />
