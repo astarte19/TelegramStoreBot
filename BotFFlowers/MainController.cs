@@ -375,6 +375,7 @@ namespace BotFFlowers
 			PushL("🗒 Дополнительные пожелания:");
 			await Send();
 			customer_info.Additional = await AwaitText();
+			customer_info.order_ID = random.Next(500000).ToString();;
 			List<int> total_price = new List<int>();
 			int result_price = 0;
 			if(customer_info.Customer_name is not null && customer_info.Customer_number is not null)
@@ -387,9 +388,9 @@ namespace BotFFlowers
 			}
 				);
 				//Увед в приватный канал
-				await Client.SendTextMessageAsync(ChatId, "✅ <b>Заказ оформлен!</b>\nВ ближайшее время с вами свяжется менеджер для подтверждения заказа!", ParseMode.Html,replyMarkup: back_menu);
-				string ID_ORDER = random.Next(500000).ToString();
-				string Notif_message = $"🟩 <b>Новый заказ! #{ID_ORDER}</b>\n===============\n<b>Заказчик:</b> {customer_info.Customer_name} \nНомер заказчика: {customer_info.Customer_number}\nТелега заказчика: @{Context.GetUsername()} \n===============\n<b>Получатель:</b> {customer_info.Receive_name} \nНомер получателя: {customer_info.Receive_number} \n===============\n<b>Адрес:</b> {customer_info.Address} \n===============\n<b>Дополнительно:</b> {customer_info.Additional} \n===============\n<b>Заказанные товары</b> 👇\n";
+				await Client.SendTextMessageAsync(ChatId, $"✅ <b>Заказ оформлен!</b>\nНомер заказа: #{customer_info.order_ID}\nВ ближайшее время с вами свяжется менеджер для подтверждения заказа!", ParseMode.Html,replyMarkup: back_menu);
+				
+				string Notif_message = $"🟨 <b>Новый заказ! #{customer_info.order_ID}</b>\n===============\n<b>Заказчик:</b> {customer_info.Customer_name} \nНомер заказчика: {customer_info.Customer_number}\nТелега заказчика: @{Context.GetUsername()} \n===============\n<b>Получатель:</b> {customer_info.Receive_name} \nНомер получателя: {customer_info.Receive_number} \n===============\n<b>Адрес:</b> {customer_info.Address} \n===============\n<b>Дополнительно:</b> {customer_info.Additional} \n===============\n<b>Заказанные товары</b> 👇\n";
 			
 				for (int i = 0; i < shop_cart.Count; i++)
 				{
