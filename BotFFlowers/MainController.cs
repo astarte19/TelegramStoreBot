@@ -91,9 +91,9 @@ namespace BotFFlowers
 				RowButton("🎂  Торты", Q(PushItem,header_cakes,0,999999));
 				RowButton("🍏  Фрукты", Q(PushItem,header_fruits,0,999999));
 				RowButton("🗾  Открытки", Q(PushItem,header_postcards,0,999999));
-				RowButton("⭐ Наши оценки", Q(PressRate));
+				RowButton("🚚 Доставка", Q(PressDelivery));
 				RowButton("🛒 Корзина", Q(PressMainBasket));
-				Button("🚚 Доставка", Q(PressDelivery));
+				Button("⭐ Отзывы", Q(PressRate));
 				Button("📱 Контакты", Q(PressContact));
 				
 			}						
@@ -115,7 +115,6 @@ namespace BotFFlowers
 			}
 			DB.Close();
 		}
-
 		
 		[Action]
 		public void StartAdmin()
@@ -134,13 +133,70 @@ namespace BotFFlowers
 			RowButton("🎂  Торты", Q(PushItem,header_cakes,0,999999));
 			RowButton("🍏  Фрукты", Q(PushItem,header_fruits,0,999999));
 			RowButton("🗾  Открытки", Q(PushItem,header_postcards,0,999999));
-			RowButton("⭐ Наши оценки", Q(PressRate));
+			RowButton("🚚 Доставка", Q(PressDelivery));
 			RowButton("🛒 Корзина", Q(PressMainBasket));
-			Button("🚚 Доставка", Q(PressDelivery));
+			Button("⭐ Отзывы", Q(PressRate));
 			Button("📱 Контакты", Q(PressContact));
 			RowButton("💻 Вернуться в админку", Q(Start));
 		}
-		
+		//Стоимость доставки
+		[Action]
+		public async void PressDelivery()
+		{
+			PushL("🚚 <b>Стоимость доставки</b>\n<b>Самовывоз</b> - 0 ₽\n<b>Каменск - Шахтинский(центр и мкр.60 лет Октября)</b> - 150 ₽\n<b>Комбинат(район)</b> - 200 ₽\n<b>Старая Станица(район)</b> - 300 ₽\n<b>Шахтёрский(район)</b> - 200 ₽\n<b>Южный(район)</b> - 250 ₽\n<b>Абрамовка(посёлок)</b> - 300 ₽\n<b>Астахов(хутор)</b> - 550 ₽\n<b>Богданов(хутор)</b> - 550 ₽\n<b>Вишневецкий</b> - 800 ₽\n<b>Волченский(хутор)</b> - 500 ₽\n<b>Глубокий(посёлок)</b> - 650 ₽\n<b>Данилов(хутор)</b> - 1200 ₽\n<b>Донецк РФ</b> - 900 ₽\n<b>Диченский(хутор)</b> - 400 ₽\n<b>Заводской(микрорайон)</b> - 450 ₽\n<b>Калитвенская(станица)</b> - 500 ₽\n<b>Красновка(хутор)</b> - 350 ₽\n<b>Леcной(посёлок)</b> - 300 ₽\n<b>Лиховской(Лихая)</b> - 600 ₽\n<b>Лихая(за переездом)</b> - 700 ₽\n<b>Лихой(хутор)</b> - 800 ₽\n<b>Малая Каменка(хутор)</b> - 400 ₽\n<b>Масаловка(хутор)</b> - 550 ₽\n<b>Нижнеговейный(хутор)</b> - 300 ₽\n<b>Углеродовский</b> - 850 ₽\n<b>Филлипенков(хутор)</b> - 400 ₽\n<b>Чистоозерный(посёлок)</b> - 550 ₽\n<b>Шахта 17</b> - 500 ₽");
+			RowButton("⏪ Назад", Q(Start));
+		}
+		//Товар - Доставка
+		[Action]
+		public async Task PushDelivery()
+		{
+			SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
+			await Client.SendTextMessageAsync(ChatId, "🚚 <b>Стоимость доставки</b>", ParseMode.Html);
+			DB.Open();
+				SQLiteCommand create = DB.CreateCommand();
+				create.CommandText = "SELECT * FROM Delivery";
+				SQLiteDataReader reader = create.ExecuteReader();
+				while (reader.Read())
+				{
+					InlineKeyboardMarkup inlineKeyboard = new(
+						new[]
+						{
+							InlineKeyboardButton.WithCallbackData(text: "🛒 В корзину", callbackData: Q(DeliveryCall,reader["Guid"].ToString())),
+						}
+					);
+					await Client.SendTextMessageAsync(ChatId, $"<b>{reader["Name"].ToString()}</b> - {reader["Price"].ToString()}", ParseMode.Html,
+						replyMarkup: inlineKeyboard);
+				}
+				DB.Close();
+			
+		}
+		[Action]
+		public async Task DeliveryCall(string guid)
+		{
+			InlineKeyboardMarkup redirect_basket = new(
+
+				new[]
+				{
+					InlineKeyboardButton.WithCallbackData(text: "⏪ Меню", callbackData: Q(Start)),
+					InlineKeyboardButton.WithCallbackData(text: "🛒 К корзине", callbackData: Q(PressMainBasket)),
+					InlineKeyboardButton.WithCallbackData(text: "✅ Оформление заказа", callbackData: Q(NotificateOrder)),
+				}
+			
+			);
+			
+			SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
+			DB.Open();
+			SQLiteCommand create = DB.CreateCommand();
+			create.CommandText = "SELECT * FROM Delivery WHERE Guid = @guid";
+			create.Parameters.AddWithValue("@guid", guid);
+			SQLiteDataReader reader = create.ExecuteReader();
+			while (reader.Read())
+			{
+				shop_cart.Add(new Item("Доставка на "+reader["Name"].ToString(),reader["Price"].ToString()));
+				await Client.SendTextMessageAsync(ChatId, $"✅ Зона доставки {reader["Name"].ToString()} добавлена!", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: redirect_basket);
+			}
+			DB.Close();
+		}
 		//Действия категорий
 		//Тюльпаны
 		[Action]
@@ -212,13 +268,7 @@ namespace BotFFlowers
         }
 		
 		
-		//Стоимость доставки
-		[Action]
-		public async void PressDelivery()
-		{
-			PushL("🚚 <b>Стоимость доставки</b>\n<b>Самовывоз</b> - 0 ₽\n<b>Каменск - Шахтинский(центр и мкр.60 лет Октября)</b> - 150 ₽\n<b>Комбинат(район)</b> - 200 ₽\n<b>Старая Станица(район)</b> - 300 ₽\n<b>Шахтёрский(район)</b> - 200 ₽\n<b>Южный(район)</b> - 250 ₽\n<b>Абрамовка(посёлок)</b> - 300 ₽\n<b>Астахов(хутор)</b> - 550 ₽\n<b>Богданов(хутор)</b> - 550 ₽\n<b>Вишневецкий</b> - 800 ₽\n<b>Волченский(хутор)</b> - 500 ₽\n<b>Глубокий(посёлок)</b> - 650 ₽\n<b>Данилов(хутор)</b> - 1200 ₽\n<b>Донецк РФ</b> - 900 ₽\n<b>Диченский(хутор)</b> - 400 ₽\n<b>Заводской(микрорайон)</b> - 450 ₽\n<b>Калитвенская(станица)</b> - 500 ₽\n<b>Красновка(хутор)</b> - 350 ₽\n<b>Леcной(посёлок)</b> - 300 ₽\n<b>Лиховской(Лихая)</b> - 600 ₽\n<b>Лихая(за переездом)</b> - 700 ₽\n<b>Лихой(хутор)</b> - 800 ₽\n<b>Малая Каменка(хутор)</b> - 400 ₽\n<b>Масаловка(хутор)</b> - 550 ₽\n<b>Нижнеговейный(хутор)</b> - 300 ₽\n<b>Углеродовский</b> - 850 ₽\n<b>Филлипенков(хутор)</b> - 400 ₽\n<b>Чистоозерный(посёлок)</b> - 550 ₽\n<b>Шахта 17</b> - 500 ₽");
-			RowButton("⏪ Назад", Q(Start));
-		}
+	
 		//Контакты
 		[Action]
 		public async void PressContact()
@@ -256,7 +306,7 @@ namespace BotFFlowers
 			{
 				InlineKeyboardButton.WithCallbackData(text: "⏪ Назад", callbackData: Q(Start)),
 				InlineKeyboardButton.WithCallbackData(text: "❌ Очистить", callbackData: Q(CartDeleteCallData)),
-				InlineKeyboardButton.WithCallbackData(text: "✅ Оформить", callbackData: Q(NotificateOrder)),
+				InlineKeyboardButton.WithCallbackData(text: "🚚 Доставка", callbackData: Q(PushDelivery)),
 			}
 
 		);
@@ -268,7 +318,7 @@ namespace BotFFlowers
 			}
 
 		);
-			await Client.SendTextMessageAsync(ChatId, "🛒 <b>Корзина:</b>\n❗ Доставка шаров, тортов и игрушек осуществляется только вместе с доставкой букета!\n", Telegram.Bot.Types.Enums.ParseMode.Html);
+			await Client.SendTextMessageAsync(ChatId, "🛒 <b>Корзина:</b>\n❗ Доставка шаров, тортов и игрушек осуществляется только вместе с доставкой букета!\n❗ Для оформления заказа нажмите на выбор зон доставки(🚚 Доставка) и добавьте нужные зоны доставки\n", Telegram.Bot.Types.Enums.ParseMode.Html);
 			if (shop_cart.Count>0)
             {
 				List<int> total_list = new List<int>();
@@ -286,7 +336,7 @@ namespace BotFFlowers
 				{
 					total += i;
 				}
-				await Client.SendTextMessageAsync(ChatId, $"💰 Итоговая сумма заказа(Без учёта доставки): {total} ₽", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: create_order);
+				await Client.SendTextMessageAsync(ChatId, $"💰 Итоговая сумма заказа: {total} ₽", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: create_order);
 			}
             else
             {
@@ -322,22 +372,7 @@ namespace BotFFlowers
 			await Client.SendTextMessageAsync(ChatId, "✅ Товар удалён", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: redirect_basket);
 		}
 		
-		//Коллбэк кнопки добавления в корзину
-		[Action]
-		public async void CallData(string item_name,string _price)
-        {
-			InlineKeyboardMarkup redirect_basket = new(
-
-			new[]
-			{
-				InlineKeyboardButton.WithCallbackData(text: "⏪ Меню", callbackData: Q(Start)),
-				InlineKeyboardButton.WithCallbackData(text: "🛒 К корзине", callbackData: Q(PressMainBasket)),
-			}
-
-		);
-			shop_cart.Add(new Item(item_name,_price));
-			await Client.SendTextMessageAsync(ChatId, $"✅ Товар {item_name} добавлен в корзину!", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: redirect_basket);
-        }
+		
 
 		
 		//Постинг товаров
@@ -404,7 +439,7 @@ namespace BotFFlowers
 				{
 					result_price += i;
 				}
-				Notif_message += $"===============\n<b>Итоговая сумма</b> БЕЗ учета доставки: {result_price} ₽";
+				Notif_message += $"===============\n<b>Итоговая сумма</b>: {result_price} ₽";
 				await Notif.SendTextMessageAsync(chatId: "-1001795322586", text: $"{Notif_message}", Telegram.Bot.Types.Enums.ParseMode.Html);			
 			}
             else
