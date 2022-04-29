@@ -9,9 +9,6 @@ namespace BotFFlowers
 		public string Receive_number { get; set; }
 		public string Address { get; set; }
 		public string Additional { get; set; }
-
-
-		
 	}
 }
 

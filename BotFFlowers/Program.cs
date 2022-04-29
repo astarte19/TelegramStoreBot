@@ -8,16 +8,10 @@ namespace BotFFlowers
           {
               BotfProgram.StartBot(args, onConfigure: (svc, cfg) =>
               {
-                  
-                  
-
               }, onRun: (app, cfg) => {
                   app.UseStaticFiles();
               });
-
           }
-        
-        
     }
 }
 
