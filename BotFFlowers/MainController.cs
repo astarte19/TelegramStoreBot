@@ -25,11 +25,11 @@ namespace BotFFlowers
 		public int Insta_temp { get; set; }
 		
 		//Бот отправкм заказов в приватный канал
-		private static TelegramBotClient Notif = new TelegramBotClient("5213399849:AAHa_-r0-xgtplHmaMro9m8jmQ88qe8Nk8w");
+		private static TelegramBotClient Notif = new TelegramBotClient("APITOKEN");
 		//Админ ChatID
-		private static string admin_chatid = "387549112";
+		private static string admin_chatid = "ChatId";
 
-		private static string admin_chatid2 = "727043884";
+		private static string admin_chatid2 = "ChatId";
 		//Постройка товара
 		private List<string> prices = new List<string>();
 		private List<string> titles = new List<string>();
@@ -440,7 +440,7 @@ namespace BotFFlowers
 					result_price += i;
 				}
 				Notif_message += $"===============\n<b>Итоговая сумма</b>: {result_price} ₽";
-				await Notif.SendTextMessageAsync(chatId: "-1001795322586", text: $"{Notif_message}", Telegram.Bot.Types.Enums.ParseMode.Html);			
+				await Notif.SendTextMessageAsync(chatId: "ChannelChatId", text: $"{Notif_message}", Telegram.Bot.Types.Enums.ParseMode.Html);			
 			}
             else
             {
