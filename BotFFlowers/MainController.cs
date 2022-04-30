@@ -18,34 +18,19 @@ namespace BotFFlowers
 {
 	public class MainController : BotController
 	{
-		
-		
-		Random random = new Random();
-		//Instagram Temp
-		public int Insta_temp { get; set; }
-		
+		//Константы и токены
+		#region Constants
 		//Бот отправкм заказов в приватный канал
-		private static TelegramBotClient Notif = new TelegramBotClient("APITOKEN");
+		private static TelegramBotClient Notif = new TelegramBotClient("");
 		//Админ ChatID
-		private static string admin_chatid = "ChatId";
-
-		private static string admin_chatid2 = "ChatId";
-		//Постройка товара
-		private List<string> prices = new List<string>();
-		private List<string> titles = new List<string>();
-		private  List<string> urls = new List<string>();
-		//Корзина
-		private static List<Item> shop_cart = new List<Item>();
-		private static Customer customer_info = new Customer();
-		//CMS временное
-		private static NewCMS temp_cms = new NewCMS();
-		public int Temp_id { get; set; }
-		
+		private static string admin_chatid = "";
+		private static string admin_chatid2 = "";
+		private static string notif_chatid = "";
 		//Парсинг
 		string baseurl = "https://flowerskamensk.ru/products/category/";
 		string header_tulps = "tulpany";
 		string header_roses = "rossiyskie-rozy";
-		 string header_equadorroses = "gollandskie-rozy";
+		string header_equadorroses = "gollandskie-rozy";
 		string header_boxes = "cveti-v-korobkah";
 		string header_bouqets = "bukety";
 		string header_baskets = "korziny";
@@ -55,13 +40,31 @@ namespace BotFFlowers
 		string header_cakes = "torty";
 		string header_fruits = "frukty-v-korzine";
 		string header_postcards = "otkrytki";
+		//Для номера заказа
+		Random random = new Random();
+		//Логгер
 		readonly ILogger<MainController> _logger;
-		public MainController(ILogger<MainController> logger)
-		{
+			#endregion
 			
-			_logger = logger;
-			
-		}
+		//Буферы
+		#region Temps
+			//CMS Temp
+			public int Insta_temp { get; set; }
+			//Постройка товара
+			private List<string> prices = new List<string>();
+			private List<string> titles = new List<string>();
+			private  List<string> urls = new List<string>();
+			//Корзина
+			private static List<Item> shop_cart = new List<Item>();
+			private static Customer customer_info = new Customer();
+			//CMS временное
+			private static NewCMS temp_cms = new NewCMS();
+			//Вывод для CMS
+			public int Temp_id { get; set; }
+			#endregion
+		
+		//Основная навигация
+		#region MainNavigation
 		[Action("/start", "Меню")]
 		public void Start()
         {
@@ -95,30 +98,12 @@ namespace BotFFlowers
 				RowButton("🛒 Корзина", Q(PressMainBasket));
 				Button("⭐ Отзывы", Q(PressRate));
 				Button("📱 Контакты", Q(PressContact));
-				
-			}						
+            }						
 		}
-		//Админ действие
-		[Action]
-		public async void Instagram()
-        {
-	        
-	        SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
-			DB.Open();
-			SQLiteCommand create = DB.CreateCommand();
-			create.CommandText = "SELECT * FROM Products";
-			
-			SQLiteDataReader reader = create.ExecuteReader();
-			while (reader.Read())
-			{
-				SendPhoto(reader["Guid"].ToString(),reader["Image"].ToString(),reader["Text"].ToString(),reader["Price"].ToString());
-			}
-			DB.Close();
-		}
-		
+		//Админ старт
 		[Action]
 		public void StartAdmin()
-        {
+		{
 			PushL($"✋ <b>Привет, {Context.GetUserFullName()}!</b>\n🌷 <b>Городские цветы Каменск-Шахтинский</b> \n🟢 Самые свежие цветы и букеты! \n🟢 Более 8 лет опыта и репутации! \n🟢 Наш <i>telegram</i> канал: <a href='https://t.me/gorodskie_cveti_kamensk'>Городские Цветы Каменск</a>");
 			RowButton("🔥  Новинки!",Q(Instagram));
 			RowButton("🌷  Тюльпаны", Q(PressTulps));
@@ -139,65 +124,11 @@ namespace BotFFlowers
 			Button("📱 Контакты", Q(PressContact));
 			RowButton("💻 Вернуться в админку", Q(Start));
 		}
-		//Стоимость доставки
-		[Action]
-		public async void PressDelivery()
-		{
-			PushL("🚚 <b>Стоимость доставки</b>\n<b>Самовывоз</b> - 0 ₽\n<b>Каменск - Шахтинский(центр и мкр.60 лет Октября)</b> - 150 ₽\n<b>Комбинат(район)</b> - 200 ₽\n<b>Старая Станица(район)</b> - 300 ₽\n<b>Шахтёрский(район)</b> - 200 ₽\n<b>Южный(район)</b> - 250 ₽\n<b>Абрамовка(посёлок)</b> - 300 ₽\n<b>Астахов(хутор)</b> - 550 ₽\n<b>Богданов(хутор)</b> - 550 ₽\n<b>Вишневецкий</b> - 800 ₽\n<b>Волченский(хутор)</b> - 500 ₽\n<b>Глубокий(посёлок)</b> - 650 ₽\n<b>Данилов(хутор)</b> - 1200 ₽\n<b>Донецк РФ</b> - 900 ₽\n<b>Диченский(хутор)</b> - 400 ₽\n<b>Заводской(микрорайон)</b> - 450 ₽\n<b>Калитвенская(станица)</b> - 500 ₽\n<b>Красновка(хутор)</b> - 350 ₽\n<b>Леcной(посёлок)</b> - 300 ₽\n<b>Лиховской(Лихая)</b> - 600 ₽\n<b>Лихая(за переездом)</b> - 700 ₽\n<b>Лихой(хутор)</b> - 800 ₽\n<b>Малая Каменка(хутор)</b> - 400 ₽\n<b>Масаловка(хутор)</b> - 550 ₽\n<b>Нижнеговейный(хутор)</b> - 300 ₽\n<b>Углеродовский</b> - 850 ₽\n<b>Филлипенков(хутор)</b> - 400 ₽\n<b>Чистоозерный(посёлок)</b> - 550 ₽\n<b>Шахта 17</b> - 500 ₽");
-			RowButton("⏪ Назад", Q(Start));
-		}
-		//Товар - Доставка
-		[Action]
-		public async Task PushDelivery()
-		{
-			SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
-			await Client.SendTextMessageAsync(ChatId, "🚚 <b>Стоимость доставки</b>", ParseMode.Html);
-			DB.Open();
-				SQLiteCommand create = DB.CreateCommand();
-				create.CommandText = "SELECT * FROM Delivery";
-				SQLiteDataReader reader = create.ExecuteReader();
-				while (reader.Read())
-				{
-					InlineKeyboardMarkup inlineKeyboard = new(
-						new[]
-						{
-							InlineKeyboardButton.WithCallbackData(text: "🛒 В корзину", callbackData: Q(DeliveryCall,reader["Guid"].ToString())),
-						}
-					);
-					await Client.SendTextMessageAsync(ChatId, $"<b>{reader["Name"].ToString()}</b> - {reader["Price"].ToString()}", ParseMode.Html,
-						replyMarkup: inlineKeyboard);
-				}
-				DB.Close();
-			
-		}
-		[Action]
-		public async Task DeliveryCall(string guid)
-		{
-			InlineKeyboardMarkup redirect_basket = new(
-
-				new[]
-				{
-					InlineKeyboardButton.WithCallbackData(text: "⏪ Меню", callbackData: Q(Start)),
-					InlineKeyboardButton.WithCallbackData(text: "🛒 К корзине", callbackData: Q(PressMainBasket)),
-					InlineKeyboardButton.WithCallbackData(text: "✅ Оформление заказа", callbackData: Q(NotificateOrder)),
-				}
-			
-			);
-			
-			SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
-			DB.Open();
-			SQLiteCommand create = DB.CreateCommand();
-			create.CommandText = "SELECT * FROM Delivery WHERE Guid = @guid";
-			create.Parameters.AddWithValue("@guid", guid);
-			SQLiteDataReader reader = create.ExecuteReader();
-			while (reader.Read())
-			{
-				shop_cart.Add(new Item("Доставка на "+reader["Name"].ToString(),reader["Price"].ToString()));
-				await Client.SendTextMessageAsync(ChatId, $"✅ Зона доставки {reader["Name"].ToString()} добавлена!", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: redirect_basket);
-			}
-			DB.Close();
-		}
-		//Действия категорий
+		#endregion
+		
+		//Вторичная навигация
+		#region 2ndNavigation
+		//Навигация категорий
 		//Тюльпаны
 		[Action]
 		public void PressTulps()
@@ -268,7 +199,7 @@ namespace BotFFlowers
         }
 		
 		
-	
+		//Навигация допов
 		//Контакты
 		[Action]
 		public async void PressContact()
@@ -283,344 +214,75 @@ namespace BotFFlowers
 			PushL("<b>Наш рейтинг:</b>\n\n4.8 ⭐ (РЕЙТИНГ ЯНДЕКС)\n*на основе 42 официальных отзывов в сервисах данной поисковой службы\n\n4.74 ⭐ (РЕЙТИНГ GOOGLE)\n*на основе 57 официальных отзывов в сервисах данной поисковой службы");
 			RowButton("⏪ Назад", Q(Start));
 		}
-
-		
-		
-		//Корзина
+		//Стоимость доставки
 		[Action]
-		public async void PressMainBasket()
+		public async void PressDelivery()
 		{
-			//Айди товара в корзине
-			int id = 0;
-			//Маркап товара
-			InlineKeyboardMarkup delete_cart = new(
-				new[]
-			{
-				InlineKeyboardButton.WithCallbackData(text: "❌ Удалить товар", callbackData: Q(DeleteAtId,id)),
-			}
-
-		);
-			//Маркап корзины
-			InlineKeyboardMarkup create_order = new(
-				new[]
-			{
-				InlineKeyboardButton.WithCallbackData(text: "⏪ Назад", callbackData: Q(Start)),
-				InlineKeyboardButton.WithCallbackData(text: "❌ Очистить", callbackData: Q(CartDeleteCallData)),
-				InlineKeyboardButton.WithCallbackData(text: "🚚 Доставка", callbackData: Q(PushDelivery)),
-			}
-
-		);
-			//Маркап пустой корзины
-			InlineKeyboardMarkup redirect = new(
-				new[]
-			{
-				InlineKeyboardButton.WithCallbackData(text: "⏪ Меню", callbackData: Q(Start)),
-			}
-
-		);
-			await Client.SendTextMessageAsync(ChatId, "🛒 <b>Корзина:</b>\n❗ Доставка шаров, тортов и игрушек осуществляется только вместе с доставкой букета!\n❗ Для оформления заказа нажмите на выбор зон доставки(🚚 Доставка) и добавьте нужные зоны доставки\n", Telegram.Bot.Types.Enums.ParseMode.Html);
-			if (shop_cart.Count>0)
-            {
-				List<int> total_list = new List<int>();
-				int total = 0;
-				for (int i = 0; i < shop_cart.Count; i++)
-				{
-					id = i;
-					await Client.SendTextMessageAsync(ChatId, $"⭐ {shop_cart.ElementAt(i).Name} : {shop_cart.ElementAt(i).Price}", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: delete_cart);
-					string check = new string(shop_cart.ElementAt(i).Price.Where(t => char.IsDigit(t)).ToArray());
-					int price = Convert.ToInt32(check);
-					total_list.Add(price);
-					
-				}
-				foreach (var i in total_list)
-				{
-					total += i;
-				}
-				await Client.SendTextMessageAsync(ChatId, $"💰 Итоговая сумма заказа: {total} ₽", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: create_order);
-			}
-            else
-            {
-	            await Client.SendTextMessageAsync(ChatId, $"Вы ничего не добавили в корзину 😔", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: redirect);
-			}
+			PushL("🚚 <b>Стоимость доставки</b>\n<b>Самовывоз</b> - 0 ₽\n<b>Каменск - Шахтинский(центр и мкр.60 лет Октября)</b> - 150 ₽\n<b>Комбинат(район)</b> - 200 ₽\n<b>Старая Станица(район)</b> - 300 ₽\n<b>Шахтёрский(район)</b> - 200 ₽\n<b>Южный(район)</b> - 250 ₽\n<b>Абрамовка(посёлок)</b> - 300 ₽\n<b>Астахов(хутор)</b> - 550 ₽\n<b>Богданов(хутор)</b> - 550 ₽\n<b>Вишневецкий</b> - 800 ₽\n<b>Волченский(хутор)</b> - 500 ₽\n<b>Глубокий(посёлок)</b> - 650 ₽\n<b>Данилов(хутор)</b> - 1200 ₽\n<b>Донецк РФ</b> - 900 ₽\n<b>Диченский(хутор)</b> - 400 ₽\n<b>Заводской(микрорайон)</b> - 450 ₽\n<b>Калитвенская(станица)</b> - 500 ₽\n<b>Красновка(хутор)</b> - 350 ₽\n<b>Леcной(посёлок)</b> - 300 ₽\n<b>Лиховской(Лихая)</b> - 600 ₽\n<b>Лихая(за переездом)</b> - 700 ₽\n<b>Лихой(хутор)</b> - 800 ₽\n<b>Малая Каменка(хутор)</b> - 400 ₽\n<b>Масаловка(хутор)</b> - 550 ₽\n<b>Нижнеговейный(хутор)</b> - 300 ₽\n<b>Углеродовский</b> - 850 ₽\n<b>Филлипенков(хутор)</b> - 400 ₽\n<b>Чистоозерный(посёлок)</b> - 550 ₽\n<b>Шахта 17</b> - 500 ₽");
+			RowButton("⏪ Назад", Q(Start));
 		}
-		//Полная очистка корзины
-		[Action]
-		public async void CartDeleteCallData()
-        {
-			InlineKeyboardMarkup redirect_basket = new(
-				new[]
-			{
-				InlineKeyboardButton.WithCallbackData(text: "⏪ Меню", callbackData: Q(Start)),
-			}
-		);
-			shop_cart.Clear();
-			await Client.SendTextMessageAsync(ChatId, "✅ Корзина очищена", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: redirect_basket);
-        }
-		//Удаление одного товара из корзины по ID
-		[Action]
-		public async void DeleteAtId(int id)
-        {
-			InlineKeyboardMarkup redirect_basket = new(
-				new[]
-			{
-				InlineKeyboardButton.WithCallbackData(text: "⏪ Меню", callbackData: Q(Start)),
-				InlineKeyboardButton.WithCallbackData(text: "🛒 К корзине", callbackData: Q(PressMainBasket)),
-			}
 
-		);
-			shop_cart.RemoveAt(id);
-			await Client.SendTextMessageAsync(ChatId, "✅ Товар удалён", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: redirect_basket);
+		#endregion
+		
+		//Логика CMS
+		#region CMSlogic
+		//Получение CMS айтемов для юзеров
+		[Action]
+		public async void Instagram()
+		{
+			SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
+			DB.Open();
+			SQLiteCommand create = DB.CreateCommand();
+			create.CommandText = "SELECT * FROM Products";
+			SQLiteDataReader reader = create.ExecuteReader();
+			while (reader.Read())
+			{
+				SendCMS(reader["Guid"].ToString(),reader["Image"].ToString(),reader["Text"].ToString(),reader["Price"].ToString());
+			}
+			DB.Close();
 		}
-		
-		
-
-		
-		//Постинг товаров
-		public async Task SendPhoto(string guid, string _imgurl, string _itemname, string _price)
+		//Отправка товаров CMS юзерам
+		public async Task SendCMS(string guid, string _imgurl, string _itemname, string _price)
 		{
 			InlineKeyboardMarkup inlineKeyboard = new(
 				new[]
-			{
-				InlineKeyboardButton.WithCallbackData(text: "🛒 В корзину", callbackData: Q(CallDataV2,guid)),
-			}
+				{
+					InlineKeyboardButton.WithCallbackData(text: "🛒 В корзину", callbackData: Q(CallDataCMS,guid)),
+				}
 			);
-			 await Client.SendPhotoAsync(ChatId,_imgurl,$"<b>{_itemname}</b>\n\nЦена: {_price}\n\n🚚 Доставка или самовывоз", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: inlineKeyboard);
+			await Client.SendPhotoAsync(ChatId,_imgurl,$"<b>{_itemname}</b>\n\nЦена: {_price}\n\n🚚 Доставка или самовывоз", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: inlineKeyboard);
 		}
-
-		//Обработка сообщений пользователя и постройка уведомления нового заказа
+		//Получение и отправка CMS товаров админам
 		[Action]
-		public async Task NotificateOrder()
+		private async void ReadTable()
 		{
-			PushL("Пожалуйста, заполните форму ниже 👇");
-			PushL("🙂 Ваше ФИО:");
-			await Send();			 
-			customer_info.Customer_name = await AwaitText();
-			PushL("📱 Ваш номер телефона:");
-			await Send();
-			customer_info.Customer_number = await AwaitText();
-			PushL("🙂 ФИО получателя:");
-			await Send();
-			customer_info.Receive_name = await AwaitText();
-			PushL("📱 Номер телефона получателя:");
-			await Send();
-			customer_info.Receive_number = await AwaitText();
-			PushL("🏠 Адрес получателя:");
-			await Send();
-			customer_info.Address = await AwaitText();
-			PushL("🗒 Дополнительные пожелания:");
-			await Send();
-			customer_info.Additional = await AwaitText();
-			customer_info.order_ID = random.Next(500000).ToString();;
-			List<int> total_price = new List<int>();
-			int result_price = 0;
-			if(customer_info.Customer_name is not null && customer_info.Customer_number is not null)
-            {
-				//Инлайн оформления заказа
-				InlineKeyboardMarkup back_menu = new(
-					new[]
+			SQLiteConnection check_connection = new SQLiteConnection("Data Source=DBFlowers.db;");
+			check_connection.Open();
+			SQLiteCommand check_command = check_connection.CreateCommand();
+			check_command.CommandText = "SELECT count(rowid) FROM Products"; 
+			check_command.ExecuteNonQuery();
+			int countRows = (int)(long)check_command.ExecuteScalar();
+			check_connection.Close();
+			if (countRows == 0)
 			{
-				InlineKeyboardButton.WithCallbackData(text: "⏪ Меню", callbackData: Q(Start)),
+				await Client.SendTextMessageAsync(ChatId, "❌ Товаров нет! Зайди и добавь!", ParseMode.Html);
 			}
-				);
-				//Увед в приватный канал
-				await Client.SendTextMessageAsync(ChatId, $"✅ <b>Заказ оформлен!</b>\nНомер заказа: #{customer_info.order_ID}\nВ ближайшее время с вами свяжется менеджер для подтверждения заказа!", ParseMode.Html,replyMarkup: back_menu);
-				
-				string Notif_message = $"🟨 <b>Новый заказ! #{customer_info.order_ID}</b>\n===============\n<b>Заказчик:</b> {customer_info.Customer_name} \nНомер заказчика: {customer_info.Customer_number}\nТелега заказчика: @{Context.GetUsername()} \n===============\n<b>Получатель:</b> {customer_info.Receive_name} \nНомер получателя: {customer_info.Receive_number} \n===============\n<b>Адрес:</b> {customer_info.Address} \n===============\n<b>Дополнительно:</b> {customer_info.Additional} \n===============\n<b>Заказанные товары</b> 👇\n";
-			
-				for (int i = 0; i < shop_cart.Count; i++)
-				{
-				string check = new string(shop_cart.ElementAt(i).Price.Where(t => char.IsDigit(t)).ToArray());
-					int price = Convert.ToInt32(check);
-					total_price.Add(price);
-					Notif_message += $"⭐ Товар: {shop_cart.ElementAt(i).Name}  Стоимость: {shop_cart.ElementAt(i).Price}\n ";
-				}
-
-				foreach (var i in total_price)
-				{
-					result_price += i;
-				}
-				Notif_message += $"===============\n<b>Итоговая сумма</b>: {result_price} ₽";
-				await Notif.SendTextMessageAsync(chatId: "ChannelChatId", text: $"{Notif_message}", Telegram.Bot.Types.Enums.ParseMode.Html);			
-			}
-            else
-            {
-				await Client.SendTextMessageAsync(ChatId, "😕 Некорректные данные!\n Оформите заказ в корзине снова!", Telegram.Bot.Types.Enums.ParseMode.Html);
-            }
-			
-		}
-
-		//Сортировка и отправка
-		[Action]
-			public async Task PushItem(string _header, int from_price, int to_price)
+			else
 			{
-				
 				SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
-				await Send("⏳ Загрузка товаров...");
-				ParseItem(baseurl + _header);
-				if (urls.Count == 0 && titles.Count == 0 & prices.Count == 0)
+				DB.Open();
+				SQLiteCommand create = DB.CreateCommand();
+				create.CommandText = "SELECT * FROM Products";
+				SQLiteDataReader reader = create.ExecuteReader();
+				while (reader.Read())
 				{
-					await Send("В данной категории товары закончились 🥺");
+					Temp_id = Convert.ToInt32(reader["Id"]);
+					await Client.SendPhotoAsync(ChatId, reader["Image"].ToString(), caption: $"ID:{reader["Id"]}\n<b>{reader["Text"]}</b>\n\nЦена: {reader["Price"]}\n\n🚚 Доставка или самовывоз", ParseMode.Html);
 				}
-				else
-				{
-					//Очистить бд-буфер
-					DB.Open();
-					SQLiteCommand clear = DB.CreateCommand();
-					clear.CommandText = "DELETE FROM Temp";
-					clear.ExecuteNonQuery();
-					DB.Close();
-					for (int i = 0; i < prices.Count; i++)
-					{
-						string check = new string(prices.ElementAt(i).Where(t => char.IsDigit(t)).ToArray());
-						int price = Convert.ToInt32(check);
-						if (price >= from_price && price <= to_price)
-						{
-							//Уникальный ID, который я передаю в Callback, а потом вытаскиваю через него айтемы
-							string ID = Guid.NewGuid().ToString("N");
-							//Заполнить бд-буфер
-							DB.Open();
-							SQLiteCommand add = DB.CreateCommand();
-							add.CommandText = "INSERT INTO Temp VALUES(@ID, @Name,@Price)";
-							add.Parameters.AddWithValue("@ID", ID);
-							add.Parameters.AddWithValue("@Name", titles.ElementAt(i));
-							add.Parameters.AddWithValue("@Price", prices.ElementAt(i));
-							add.ExecuteNonQuery();
-							DB.Close();
-							InlineKeyboardMarkup inlineKeyboard = new(
-								new[]
-								{
-									InlineKeyboardButton.WithCallbackData(text: "🛒 В корзину", callbackData: Q(CallDataTest,ID)),
-								}
-							);
-							
-							await Client.SendPhotoAsync(ChatId,urls.ElementAt(i),$"<b>{titles.ElementAt(i)}</b>\n\nЦена: {prices.ElementAt(i)}\n\n🚚 Доставка или самовывоз", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: inlineKeyboard);
-						}
-					}
-				}
-				
-				
-			}
-//тест
-		[Action]
-		public async void CallDataTest(string id)
-		{
-			InlineKeyboardMarkup redirect_basket = new(
-
-				new[]
-				{
-					InlineKeyboardButton.WithCallbackData(text: "⏪ Меню", callbackData: Q(Start)),
-					InlineKeyboardButton.WithCallbackData(text: "🛒 К корзине", callbackData: Q(PressMainBasket)),
-				}
-
-			);
-			SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
-			DB.Open();
-			SQLiteCommand create = DB.CreateCommand();
-			create.CommandText = "SELECT * FROM Temp WHERE ID = @id";
-			create.Parameters.AddWithValue("@id", id);
-			SQLiteDataReader reader = create.ExecuteReader();
-			while (reader.Read())
-			{
-				shop_cart.Add(new Item(reader["Name"].ToString(),reader["Price"].ToString()));
-				await Client.SendTextMessageAsync(ChatId, $"✅ Товар {reader["Name"].ToString()} добавлен в корзину!", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: redirect_basket);
-			}
-			DB.Close();
-			
-		}
-//тест
-//инст
-		[Action]
-		public async void CallDataV2(string id)
-		{
-			InlineKeyboardMarkup redirect_basket = new(
-
-				new[]
-				{
-					InlineKeyboardButton.WithCallbackData(text: "⏪ Меню", callbackData: Q(Start)),
-					InlineKeyboardButton.WithCallbackData(text: "🛒 К корзине", callbackData: Q(PressMainBasket)),
-				}
-
-			);
-			SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
-			DB.Open();
-			SQLiteCommand create = DB.CreateCommand();
-			create.CommandText = "SELECT * FROM Products WHERE Guid = @guid";
-			create.Parameters.AddWithValue("@guid", id);
-			SQLiteDataReader reader = create.ExecuteReader();
-			while (reader.Read())
-			{
-				shop_cart.Add(new Item(reader["Text"].ToString(),reader["Price"].ToString()));
-				await Client.SendTextMessageAsync(ChatId, $"✅ Товар {reader["Text"].ToString()} добавлен в корзину!", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: redirect_basket);
-			}
-			DB.Close();
-			
-		}
-			[On(Handle.Exception)]
-			public async Task OnException(Exception e)
-			{
-				_logger.LogError(e, "Unhandled exception");
-				if (Context.Update.Type == UpdateType.CallbackQuery)
-				{
-					await AnswerCallback("Error");
-				}
-				else if (Context.Update.Type == UpdateType.Message)
-				{
-					Push("Error");
-				}
-			}
-		//Исключение
-		[On(Handle.Unknown)]
-		public void Unknown()
-		{
-			PushL("Команда не распознана!");
-		}
-		//Парсинг
-		public void ParseItem(string _baseurl)
-		{		
-			HtmlDocument HD = new HtmlDocument();
-			var web = new HtmlWeb
-			{
-				AutoDetectEncoding = false,
-				OverrideEncoding = Encoding.UTF8,
-			};
-			HD = web.Load(_baseurl);
-			HtmlNodeCollection PricesElements = HD.DocumentNode.SelectNodes("//div[@class='product-item-price']");
-			HtmlNodeCollection TitlesElements = HD.DocumentNode.SelectNodes("//div[@class='product-item__link']//a");
-			HtmlNodeCollection UrlsElements = HD.DocumentNode.SelectNodes("//div[@class='product-item__content']//picture//img");
-			// Проверяем наличие узлов
-			if (PricesElements != null)
-			{
-				foreach (HtmlNode HN in PricesElements)
-				{
-					// Получаем строчки
-					string outputText = HN.InnerText;
-					prices.Add(outputText);
-				}
-
-			}
-			if (TitlesElements != null)
-			{
-				foreach (HtmlNode Title in TitlesElements)
-				{
-					string outputText = Title.InnerText;
-					titles.Add(outputText);
-				}
-			}
-			if (UrlsElements != null)
-			{
-				foreach (HtmlNode Url in UrlsElements)
-				{
-					string outputText = Url.GetAttributeValue("src", "");
-					urls.Add("https:" + outputText);
-				}
+				DB.Close();
 			}
 		}
-
-
-
-		//CMS
-
-		//Создание карточки
+		//Навигация создания карточки товара
 		[Action]
 		public void CMS_ADD()
 		{
@@ -628,10 +290,7 @@ namespace BotFFlowers
 			RowButton("⏪ Назад", Q(Start));
 			Button("➕ Добавить", Q(Add_product));
 		}
-
-		//Просмотр всех товаров
-		
-		//Формировка карточки
+		//Формирование карточки
 		[Action]
 		public async Task Add_product()
 		{
@@ -655,10 +314,7 @@ namespace BotFFlowers
 			var update = await AwaitNextUpdate();
 			if (update.Update.Type == UpdateType.Message && update.Update.Message.Type == MessageType.Photo)
 					{
-				//temp_cms.Img = update.Update.Message.Document.FileId;
-				temp_cms.Img = update.Update.Message.Photo[update.Update.Message.Photo.Length - 1].FileId;
-
-
+						temp_cms.Img = update.Update.Message.Photo[update.Update.Message.Photo.Length - 1].FileId;
 					}
 			else
             {
@@ -675,7 +331,6 @@ namespace BotFFlowers
 			temp_cms.guid = guid;
 			await Client.SendTextMessageAsync(ChatId, $"Карточка товара сформирована!", ParseMode.Html, replyMarkup: product_sample);
 		}
-
 		//Final добавление в бд
 		[Action]
 		public async Task CMS_Create()
@@ -689,7 +344,7 @@ namespace BotFFlowers
 			AddProduct(product);
 			await Client.SendTextMessageAsync(ChatId, $"✅ Товар {product.Text} успешно добавлен в категорию!");
 		}
-		//Предпросмотр
+		//Предпросмотр карточки
 		[Action]
 		public async Task PreviewCMS()
 		{
@@ -704,7 +359,7 @@ namespace BotFFlowers
 			await Client.SendPhotoAsync(ChatId, temp_cms.Img,caption:$"<b>{temp_cms.Text}</b>\n\nЦена: {temp_cms.Price}\n\n🚚 Доставка или самовывоз",ParseMode.Html);
 		}
 
-		
+		//Изменение карточки товаров
 		[Action]
 		public async Task Edit_product()
         {
@@ -774,8 +429,11 @@ namespace BotFFlowers
 		}
 		
 
+		#endregion
+		
+		//Сервисы CMS CRUD
+		#region CMSservices
 		//CRUD CMS
-
 		//Создание, обновление, удаление
 		private int ExecuteWrite(string query, Dictionary<string, object> args)
 		{
@@ -886,35 +544,410 @@ namespace BotFFlowers
 			};
 			return product;
 		}
-		[Action]
-		private async void ReadTable()
-        {
-			SQLiteConnection check_connection = new SQLiteConnection("Data Source=DBFlowers.db;");
-			check_connection.Open();
-			SQLiteCommand check_command = check_connection.CreateCommand();
-			check_command.CommandText = "SELECT count(rowid) FROM Products"; 
-			check_command.ExecuteNonQuery();
-			int countRows = (int)(long)check_command.ExecuteScalar();
-			check_connection.Close();
-			if (countRows == 0)
+		
+
+		#endregion
+		
+		//Парсинг и отправка
+		#region PushingParsing
+		
+		//Парсинг
+		public void ParseItem(string _baseurl)
+		{		
+			HtmlDocument HD = new HtmlDocument();
+			var web = new HtmlWeb
 			{
-				await Client.SendTextMessageAsync(ChatId, "❌ Товаров нет! Зайди и добавь!", ParseMode.Html);
+				AutoDetectEncoding = false,
+				OverrideEncoding = Encoding.UTF8,
+			};
+			HD = web.Load(_baseurl);
+			HtmlNodeCollection PricesElements = HD.DocumentNode.SelectNodes("//div[@class='product-item-price']");
+			HtmlNodeCollection TitlesElements = HD.DocumentNode.SelectNodes("//div[@class='product-item__link']//a");
+			HtmlNodeCollection UrlsElements = HD.DocumentNode.SelectNodes("//div[@class='product-item__content']//picture//img");
+			// Проверяем наличие узлов
+			if (PricesElements != null)
+			{
+				foreach (HtmlNode HN in PricesElements)
+				{
+					// Получаем строчки
+					string outputText = HN.InnerText;
+					prices.Add(outputText);
+				}
+
+			}
+			if (TitlesElements != null)
+			{
+				foreach (HtmlNode Title in TitlesElements)
+				{
+					string outputText = Title.InnerText;
+					titles.Add(outputText);
+				}
+			}
+			if (UrlsElements != null)
+			{
+				foreach (HtmlNode Url in UrlsElements)
+				{
+					string outputText = Url.GetAttributeValue("src", "");
+					urls.Add("https:" + outputText);
+				}
+			}
+		}
+		//Сортировка и отправка спарсенных товаров
+		[Action]
+		public async Task PushItem(string _header, int from_price, int to_price)
+		{
+				
+			SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
+			await Send("⏳ Загрузка товаров...");
+			ParseItem(baseurl + _header);
+			if (urls.Count == 0 && titles.Count == 0 & prices.Count == 0)
+			{
+				await Send("В данной категории товары закончились 🥺");
 			}
 			else
-            {
-				SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
+			{
+				//Очистить бд-буфер
 				DB.Open();
-				SQLiteCommand create = DB.CreateCommand();
-				create.CommandText = "SELECT * FROM Products";
-				SQLiteDataReader reader = create.ExecuteReader();
-				while (reader.Read())
-				{
-					Temp_id = Convert.ToInt32(reader["Id"]);
-					await Client.SendPhotoAsync(ChatId, reader["Image"].ToString(), caption: $"ID:{reader["Id"]}\n<b>{reader["Text"]}</b>\n\nЦена: {reader["Price"]}\n\n🚚 Доставка или самовывоз", ParseMode.Html);
-				}
+				SQLiteCommand clear = DB.CreateCommand();
+				clear.CommandText = "DELETE FROM Temp";
+				clear.ExecuteNonQuery();
 				DB.Close();
+				for (int i = 0; i < prices.Count; i++)
+				{
+					string check = new string(prices.ElementAt(i).Where(t => char.IsDigit(t)).ToArray());
+					int price = Convert.ToInt32(check);
+					if (price >= from_price && price <= to_price)
+					{
+						//Уникальный ID, который я передаю в Callback, а потом вытаскиваю через него айтемы
+						string ID = Guid.NewGuid().ToString("N");
+						//Заполнить бд-буфер
+						DB.Open();
+						SQLiteCommand add = DB.CreateCommand();
+						add.CommandText = "INSERT INTO Temp VALUES(@ID, @Name,@Price)";
+						add.Parameters.AddWithValue("@ID", ID);
+						add.Parameters.AddWithValue("@Name", titles.ElementAt(i));
+						add.Parameters.AddWithValue("@Price", prices.ElementAt(i));
+						add.ExecuteNonQuery();
+						DB.Close();
+						InlineKeyboardMarkup inlineKeyboard = new(
+							new[]
+							{
+								InlineKeyboardButton.WithCallbackData(text: "🛒 В корзину", callbackData: Q(CallDataParse,ID)),
+							}
+						);
+							
+						await Client.SendPhotoAsync(ChatId,urls.ElementAt(i),$"<b>{titles.ElementAt(i)}</b>\n\nЦена: {prices.ElementAt(i)}\n\n🚚 Доставка или самовывоз", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: inlineKeyboard);
+					}
+				}
 			}
-        }
+		}
+		#endregion
+		
+		//Доставка
+		#region Delivery
+		//Вывод айтемов доставки
+		[Action]
+		public async Task PushDelivery()
+		{
+			SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
+			await Client.SendTextMessageAsync(ChatId, "🚚 <b>Стоимость доставки</b>", ParseMode.Html);
+			DB.Open();
+			SQLiteCommand create = DB.CreateCommand();
+			create.CommandText = "SELECT * FROM Delivery";
+			SQLiteDataReader reader = create.ExecuteReader();
+			while (reader.Read())
+			{
+				InlineKeyboardMarkup inlineKeyboard = new(
+					new[]
+					{
+						InlineKeyboardButton.WithCallbackData(text: "🛒 В корзину", callbackData: Q(DeliveryCall,reader["Guid"].ToString())),
+					}
+				);
+				await Client.SendTextMessageAsync(ChatId, $"<b>{reader["Name"].ToString()}</b> - {reader["Price"].ToString()}", ParseMode.Html,
+					replyMarkup: inlineKeyboard);
+			}
+			DB.Close();
+		}
+		#endregion
+		
+		//Коллбэки
+		#region Callbacks
+		//Коллбэк доставки
+		[Action]
+		public async Task DeliveryCall(string guid)
+		{
+			InlineKeyboardMarkup redirect_basket = new(
+
+				new[]
+				{
+					InlineKeyboardButton.WithCallbackData(text: "⏪ Меню", callbackData: Q(Start)),
+					InlineKeyboardButton.WithCallbackData(text: "🛒 К корзине", callbackData: Q(PressMainBasket)),
+					InlineKeyboardButton.WithCallbackData(text: "✅ Оформление заказа", callbackData: Q(NotificateOrder)),
+				}
+			
+			);
+			
+			SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
+			DB.Open();
+			SQLiteCommand create = DB.CreateCommand();
+			create.CommandText = "SELECT * FROM Delivery WHERE Guid = @guid";
+			create.Parameters.AddWithValue("@guid", guid);
+			SQLiteDataReader reader = create.ExecuteReader();
+			while (reader.Read())
+			{
+				shop_cart.Add(new Item("Доставка на "+reader["Name"].ToString(),reader["Price"].ToString()));
+				await Client.SendTextMessageAsync(ChatId, $"✅ Зона доставки {reader["Name"].ToString()} добавлена!", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: redirect_basket);
+			}
+			DB.Close();
+		}
+		//Коллбэк полной очистки корзины
+		[Action]
+		public async void CartDeleteCallData()
+		{
+			InlineKeyboardMarkup redirect_basket = new(
+				new[]
+				{
+					InlineKeyboardButton.WithCallbackData(text: "⏪ Меню", callbackData: Q(Start)),
+				}
+			);
+			shop_cart.Clear();
+			await Client.SendTextMessageAsync(ChatId, "✅ Корзина очищена", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: redirect_basket);
+		}
+		//Коллбэк спарсенных товаров
+		[Action]
+		public async void CallDataParse(string id)
+		{
+			InlineKeyboardMarkup redirect_basket = new(
+
+				new[]
+				{
+					InlineKeyboardButton.WithCallbackData(text: "⏪ Меню", callbackData: Q(Start)),
+					InlineKeyboardButton.WithCallbackData(text: "🛒 К корзине", callbackData: Q(PressMainBasket)),
+				}
+
+			);
+			SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
+			DB.Open();
+			SQLiteCommand create = DB.CreateCommand();
+			create.CommandText = "SELECT * FROM Temp WHERE ID = @id";
+			create.Parameters.AddWithValue("@id", id);
+			SQLiteDataReader reader = create.ExecuteReader();
+			while (reader.Read())
+			{
+				shop_cart.Add(new Item(reader["Name"].ToString(),reader["Price"].ToString()));
+				await Client.SendTextMessageAsync(ChatId, $"✅ Товар {reader["Name"].ToString()} добавлен в корзину!", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: redirect_basket);
+			}
+			DB.Close();
+			
+		}
+		//Коллбэк CMS товаров
+		[Action]
+		public async void CallDataCMS(string id)
+		{
+			InlineKeyboardMarkup redirect_basket = new(
+
+				new[]
+				{
+					InlineKeyboardButton.WithCallbackData(text: "⏪ Меню", callbackData: Q(Start)),
+					InlineKeyboardButton.WithCallbackData(text: "🛒 К корзине", callbackData: Q(PressMainBasket)),
+				}
+
+			);
+			SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
+			DB.Open();
+			SQLiteCommand create = DB.CreateCommand();
+			create.CommandText = "SELECT * FROM Products WHERE Guid = @guid";
+			create.Parameters.AddWithValue("@guid", id);
+			SQLiteDataReader reader = create.ExecuteReader();
+			while (reader.Read())
+			{
+				shop_cart.Add(new Item(reader["Text"].ToString(),reader["Price"].ToString()));
+				await Client.SendTextMessageAsync(ChatId, $"✅ Товар {reader["Text"].ToString()} добавлен в корзину!", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: redirect_basket);
+			}
+			DB.Close();
+			
+		}
+		#endregion
+		
+		//Оформление заказа
+		#region Order
+		//Обработка сообщений пользователя и постройка уведомления нового заказа
+		[Action]
+		public async Task NotificateOrder()
+		{
+			PushL("Пожалуйста, заполните форму ниже 👇");
+			PushL("🙂 Ваше ФИО:");
+			await Send();			 
+			customer_info.Customer_name = await AwaitText();
+			PushL("📱 Ваш номер телефона:");
+			await Send();
+			customer_info.Customer_number = await AwaitText();
+			PushL("🙂 ФИО получателя:");
+			await Send();
+			customer_info.Receive_name = await AwaitText();
+			PushL("📱 Номер телефона получателя:");
+			await Send();
+			customer_info.Receive_number = await AwaitText();
+			PushL("🏠 Адрес получателя:");
+			await Send();
+			customer_info.Address = await AwaitText();
+			PushL("🗒 Дополнительные пожелания:");
+			await Send();
+			customer_info.Additional = await AwaitText();
+			customer_info.order_ID = random.Next(500000).ToString();;
+			List<int> total_price = new List<int>();
+			int result_price = 0;
+			if(customer_info.Customer_name is not null && customer_info.Customer_number is not null)
+            {
+				//Инлайн оформления заказа
+				InlineKeyboardMarkup back_menu = new(
+					new[]
+			{
+				InlineKeyboardButton.WithCallbackData(text: "⏪ Меню", callbackData: Q(Start)),
+			}
+				);
+				//Увед в приватный канал
+				await Client.SendTextMessageAsync(ChatId, $"✅ <b>Заказ оформлен!</b>\nНомер заказа: #{customer_info.order_ID}\nВ ближайшее время с вами свяжется менеджер для подтверждения заказа!", ParseMode.Html,replyMarkup: back_menu);
+				
+				string Notif_message = $"🟨 <b>Новый заказ! #{customer_info.order_ID}</b>\n===============\n<b>Заказчик:</b> {customer_info.Customer_name} \nНомер заказчика: {customer_info.Customer_number}\nТелега заказчика: @{Context.GetUsername()} \n===============\n<b>Получатель:</b> {customer_info.Receive_name} \nНомер получателя: {customer_info.Receive_number} \n===============\n<b>Адрес:</b> {customer_info.Address} \n===============\n<b>Дополнительно:</b> {customer_info.Additional} \n===============\n<b>Заказанные товары</b> 👇\n";
+			
+				for (int i = 0; i < shop_cart.Count; i++)
+				{
+				string check = new string(shop_cart.ElementAt(i).Price.Where(t => char.IsDigit(t)).ToArray());
+					int price = Convert.ToInt32(check);
+					total_price.Add(price);
+					Notif_message += $"⭐ Товар: {shop_cart.ElementAt(i).Name}  Стоимость: {shop_cart.ElementAt(i).Price}\n ";
+				}
+
+				foreach (var i in total_price)
+				{
+					result_price += i;
+				}
+				Notif_message += $"===============\n<b>Итоговая сумма</b>: {result_price} ₽";
+				await Notif.SendTextMessageAsync(chatId: notif_chatid, text: $"{Notif_message}", Telegram.Bot.Types.Enums.ParseMode.Html);			
+			}
+            else
+            {
+				await Client.SendTextMessageAsync(ChatId, "😕 Некорректные данные!\n Оформите заказ в корзине снова!", Telegram.Bot.Types.Enums.ParseMode.Html);
+            }
+			
+		}
+		
+
+		#endregion
+		
+		//Корзина
+		#region Basket
+		//Вывод товаров корзины
+		[Action]
+		public async void PressMainBasket()
+		{
+			//Айди товара в корзине
+			int id = 0;
+			//Маркап товара
+			InlineKeyboardMarkup delete_cart = new(
+				new[]
+			{
+				InlineKeyboardButton.WithCallbackData(text: "❌ Удалить товар", callbackData: Q(DeleteAtId,id)),
+			}
+
+		);
+			//Маркап корзины
+			InlineKeyboardMarkup create_order = new(
+				new[]
+			{
+				InlineKeyboardButton.WithCallbackData(text: "⏪ Назад", callbackData: Q(Start)),
+				InlineKeyboardButton.WithCallbackData(text: "❌ Очистить", callbackData: Q(CartDeleteCallData)),
+				InlineKeyboardButton.WithCallbackData(text: "🚚 Доставка", callbackData: Q(PushDelivery)),
+			}
+
+		);
+			//Маркап пустой корзины
+			InlineKeyboardMarkup redirect = new(
+				new[]
+			{
+				InlineKeyboardButton.WithCallbackData(text: "⏪ Меню", callbackData: Q(Start)),
+			}
+
+		);
+			await Client.SendTextMessageAsync(ChatId, "🛒 <b>Корзина:</b>\n❗ Доставка шаров, тортов и игрушек осуществляется только вместе с доставкой букета!\n❗ Для оформления заказа нажмите на выбор зон доставки(🚚 Доставка) и добавьте нужные зоны доставки\n", Telegram.Bot.Types.Enums.ParseMode.Html);
+			if (shop_cart.Count>0)
+            {
+				List<int> total_list = new List<int>();
+				int total = 0;
+				for (int i = 0; i < shop_cart.Count; i++)
+				{
+					id = i;
+					await Client.SendTextMessageAsync(ChatId, $"⭐ {shop_cart.ElementAt(i).Name} : {shop_cart.ElementAt(i).Price}", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: delete_cart);
+					string check = new string(shop_cart.ElementAt(i).Price.Where(t => char.IsDigit(t)).ToArray());
+					int price = Convert.ToInt32(check);
+					total_list.Add(price);
+					
+				}
+				foreach (var i in total_list)
+				{
+					total += i;
+				}
+				await Client.SendTextMessageAsync(ChatId, $"💰 Итоговая сумма заказа: {total} ₽", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: create_order);
+			}
+            else
+            {
+	            await Client.SendTextMessageAsync(ChatId, $"Вы ничего не добавили в корзину 😔", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: redirect);
+			}
+		}
+		//Удаление одного товара из корзины по ID
+		[Action]
+		public async void DeleteAtId(int id)
+		{
+			InlineKeyboardMarkup redirect_basket = new(
+				new[]
+				{
+					InlineKeyboardButton.WithCallbackData(text: "⏪ Меню", callbackData: Q(Start)),
+					InlineKeyboardButton.WithCallbackData(text: "🛒 К корзине", callbackData: Q(PressMainBasket)),
+				}
+
+			);
+			shop_cart.RemoveAt(id);
+			await Client.SendTextMessageAsync(ChatId, "✅ Товар удалён", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: redirect_basket);
+		}
+
+		#endregion
+		
+		//Обработчки и Конструкторы
+		#region Handlers
+		//Обработчки ошибок
+		[On(Handle.Exception)]
+		public async Task OnException(Exception e)
+		{
+			_logger.LogError(e, "Unhandled exception");
+			if (Context.Update.Type == UpdateType.CallbackQuery)
+			{
+				await AnswerCallback("Error");
+			}
+			else if (Context.Update.Type == UpdateType.Message)
+			{
+				Push("Error");
+			}
+		}
+		//Обработчик исключений
+		[On(Handle.Unknown)]
+		public void Unknown()
+		{
+			PushL("Команда не распознана!");
+		}
+		//Конструктор контроллера
+		public MainController(ILogger<MainController> logger)
+		{
+			_logger = logger;
+		}
+
+		#endregion
+	
+	}
+
+	public class CMSWorker
+	{
+		
 	}
 }
 
