@@ -59,8 +59,7 @@ namespace BotFFlowers
 			private static Customer customer_info = new Customer();
 			//CMS временное
 			private static NewCMS temp_cms = new NewCMS();
-			//Вывод для CMS
-			public int Temp_id { get; set; }
+			
 			#endregion
 		
 		//Основная навигация
@@ -80,9 +79,9 @@ namespace BotFFlowers
 			}
 			else
             {
-				PushL($"✋ <b>Привет, {Context.GetUserFullName()}!</b>\n🌷 <b>Городские цветы Каменск-Шахтинский</b> \n🟢 Самые свежие цветы и букеты! \n🟢 Более 8 лет опыта и репутации! \n🟢 Наш <i>telegram</i> канал: <a href='https://t.me/gorodskie_cveti_kamensk'>Городские Цветы Каменск</a>");
+				PushL($"✋ <b>Привет, {Context.GetUserFullName()}!</b>\n🌷 <b>Городские цветы Каменск-Шахтинский</b> \n🟢 Лучшие ЦВЕТЫ в городе! \n🟢 Профессиональные флористы! \n🟢 Доставка курьерской службы в любой район!\n 🟢 Наш <i>telegram</i> канал: <a href='https://t.me/gorodskie_cveti_kamensk'>Городские Цветы Каменск</a>");
 				RowButton("🔥  Новинки!",Q(Instagram));
-				RowButton("🌷  Тюльпаны", Q(PressTulps));
+			//	RowButton("🌷  Тюльпаны", Q(PressTulps));
 				RowButton("🌹  Российские Розы", Q(PressRURoses));
 				RowButton("🌹  Эквадорские Розы", Q(PressEQRoses));
 				RowButton("🌸  Цветы в коробках", Q(PressBoxes));
@@ -106,7 +105,7 @@ namespace BotFFlowers
 		{
 			PushL($"✋ <b>Привет, {Context.GetUserFullName()}!</b>\n🌷 <b>Городские цветы Каменск-Шахтинский</b> \n🟢 Самые свежие цветы и букеты! \n🟢 Более 8 лет опыта и репутации! \n🟢 Наш <i>telegram</i> канал: <a href='https://t.me/gorodskie_cveti_kamensk'>Городские Цветы Каменск</a>");
 			RowButton("🔥  Новинки!",Q(Instagram));
-			RowButton("🌷  Тюльпаны", Q(PressTulps));
+		//	RowButton("🌷  Тюльпаны", Q(PressTulps));
 			RowButton("🌹  Российские Розы", Q(PressRURoses));
 			RowButton("🌹  Эквадорские Розы", Q(PressEQRoses));
 			RowButton("🌸  Цветы в коробках", Q(PressBoxes));
@@ -276,7 +275,6 @@ namespace BotFFlowers
 				SQLiteDataReader reader = create.ExecuteReader();
 				while (reader.Read())
 				{
-					Temp_id = Convert.ToInt32(reader["Id"]);
 					await Client.SendPhotoAsync(ChatId, reader["Image"].ToString(), caption: $"ID:{reader["Id"]}\n<b>{reader["Text"]}</b>\n\nЦена: {reader["Price"]}\n\n🚚 Доставка или самовывоз", ParseMode.Html);
 				}
 				DB.Close();
@@ -663,7 +661,7 @@ namespace BotFFlowers
 						InlineKeyboardButton.WithCallbackData(text: "🛒 В корзину", callbackData: Q(DeliveryCall,reader["Guid"].ToString())),
 					}
 				);
-				await Client.SendTextMessageAsync(ChatId, $"<b>{reader["Name"].ToString()}</b> - {reader["Price"].ToString()}", ParseMode.Html,
+				await Client.SendTextMessageAsync(ChatId, $"<b>{reader["Name"].ToString()}</b> : +{reader["Price"].ToString()}", ParseMode.Html,
 					replyMarkup: inlineKeyboard);
 			}
 			DB.Close();
@@ -672,21 +670,34 @@ namespace BotFFlowers
 		
 		//Коллбэки
 		#region Callbacks
+		//Скип доставки
+		[Action]
+		public async Task CancelDelivery()
+		{
+			shop_cart.Clear();
+			Start();
+		}
 		//Коллбэк доставки
 		[Action]
 		public async Task DeliveryCall(string guid)
 		{
-			InlineKeyboardMarkup redirect_basket = new(
+			
+			InlineKeyboardMarkup make_order = new InlineKeyboardMarkup(
 
-				new[]
+				new InlineKeyboardButton[][]
 				{
-					InlineKeyboardButton.WithCallbackData(text: "⏪ Меню", callbackData: Q(Start)),
-					InlineKeyboardButton.WithCallbackData(text: "🛒 К корзине", callbackData: Q(PressMainBasket)),
-					InlineKeyboardButton.WithCallbackData(text: "✅ Оформление заказа", callbackData: Q(NotificateOrder)),
+					new InlineKeyboardButton[] 
+					{
+						
+						InlineKeyboardButton.WithCallbackData(text: "✅ Оформление заказа", callbackData: Q(NotificateOrder)),
+					},
+					new InlineKeyboardButton[] 
+					{
+						InlineKeyboardButton.WithCallbackData(text: "❌ Отмена", callbackData: Q(CancelDelivery)),
+						
+					}
 				}
-			
 			);
-			
 			SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
 			DB.Open();
 			SQLiteCommand create = DB.CreateCommand();
@@ -696,7 +707,7 @@ namespace BotFFlowers
 			while (reader.Read())
 			{
 				shop_cart.Add(new Item("Доставка на "+reader["Name"].ToString(),reader["Price"].ToString()));
-				await Client.SendTextMessageAsync(ChatId, $"✅ Зона доставки {reader["Name"].ToString()} добавлена!", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: redirect_basket);
+				await Client.SendTextMessageAsync(ChatId, $"✅ Зона доставки {reader["Name"].ToString()} добавлена!", Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: make_order);
 			}
 			DB.Close();
 		}
@@ -824,6 +835,7 @@ namespace BotFFlowers
 					result_price += i;
 				}
 				Notif_message += $"===============\n<b>Итоговая сумма</b>: {result_price} ₽";
+				
 				await Notif.SendTextMessageAsync(chatId: notif_chatid, text: $"{Notif_message}", Telegram.Bot.Types.Enums.ParseMode.Html);			
 			}
             else
@@ -853,15 +865,27 @@ namespace BotFFlowers
 
 		);
 			//Маркап корзины
-			InlineKeyboardMarkup create_order = new(
-				new[]
-			{
-				InlineKeyboardButton.WithCallbackData(text: "⏪ Назад", callbackData: Q(Start)),
-				InlineKeyboardButton.WithCallbackData(text: "❌ Очистить", callbackData: Q(CartDeleteCallData)),
-				InlineKeyboardButton.WithCallbackData(text: "🚚 Доставка", callbackData: Q(PushDelivery)),
-			}
+			
+			InlineKeyboardMarkup create_order = new InlineKeyboardMarkup(
 
-		);
+				new InlineKeyboardButton[][]
+				{
+					
+					
+					
+					new InlineKeyboardButton[] 
+					{
+						
+						InlineKeyboardButton.WithCallbackData(text: "⏪ Назад", callbackData: Q(Start)),
+						InlineKeyboardButton.WithCallbackData(text: "❌ Очистить", callbackData: Q(CartDeleteCallData)),
+					},
+					new InlineKeyboardButton[] 
+					{
+						InlineKeyboardButton.WithCallbackData(text: "🚚 Выбор зон(ы) доставки", callbackData: Q(PushDelivery)),
+						
+					},
+				}
+			);
 			//Маркап пустой корзины
 			InlineKeyboardMarkup redirect = new(
 				new[]
@@ -870,7 +894,7 @@ namespace BotFFlowers
 			}
 
 		);
-			await Client.SendTextMessageAsync(ChatId, "🛒 <b>Корзина:</b>\n❗ Доставка шаров, тортов и игрушек осуществляется только вместе с доставкой букета!\n❗ Для оформления заказа нажмите на выбор зон доставки(🚚 Доставка) и добавьте нужные зоны доставки\n", Telegram.Bot.Types.Enums.ParseMode.Html);
+			await Client.SendTextMessageAsync(ChatId, "🛒 <b>Корзина:</b>\n❗ Доставка шаров, тортов и игрушек осуществляется только вместе с доставкой букета!\n❗ Для оформления заказа выберите зону(ы) доставки и заполните форму 😉\n", Telegram.Bot.Types.Enums.ParseMode.Html);
 			if (shop_cart.Count>0)
             {
 				List<int> total_list = new List<int>();
