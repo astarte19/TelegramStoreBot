@@ -15,6 +15,7 @@ using System.Data;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
 using CSharpVitamins;
 using shortid;
+using Npgsql;
 
 namespace BotFFlowers
 {
@@ -25,13 +26,15 @@ namespace BotFFlowers
 		#region Constants
 		//Бот отправкм заказов в приватный канал
 		private static TelegramBotClient
-			Notif = new TelegramBotClient("5355673985:AAFi055Qt0RpnApk7eOwn1P_kLDmr1HZD_Y");
+			Notif = new TelegramBotClient("");
+		//Строка подключения к контейнеру
+		private static string PostgresConnectionString = "Server=localhost;Port=5432;Database=mydbname;User Id=app;Password=app;";
 
 		//Админ ChatID
-		private static string admin_chatid = "387549112";
-		private static string admin_chatid2 = "727043884";
+		// private static string admin_chatid = "387549112";
+		// private static string admin_chatid2 = "727043884";
 
-		private static string notif_chatid = "-1001868442078";
+		private static string notif_chatid = "";
 
 		//Парсинг
 		string baseurl = "https://flowerskamensk.ru/products/category/";
@@ -62,7 +65,19 @@ namespace BotFFlowers
 		static string table_cakes = "torty";
 		static string table_fruits = "fruktyvkorzine";
 		static string table_postcards = "otkrytki";
-
+		//CategoryId
+		static int table_tulps_cat = 10;
+		static int table_roses_cat = 8;
+		static int table_equadorroses_cat = 2;
+		static int table_boxes_cat = 4;
+		static int table_bouqets_cat = 12;
+		static int table_baskets_cat = 5;
+		static int table_toys_cat = 7;
+		static int table_baloons_cat = 11;
+		static int table_candy_cat = 3;
+		static int table_cakes_cat = 9;
+		static int table_fruits_cat = 1;
+		static int table_postcards_cat = 6;
 		private string[] tables =
 		{
 			"tulpany", "rossiyskierozy", "gollandskierozy", "cvetivkorobkah", "bukety", "korziny", "plusheviemishki",
@@ -85,9 +100,9 @@ namespace BotFFlowers
 		public int Insta_temp { get; set; }
 
 		//Постройка товара
+		
 		private List<string> prices = new List<string>();
 		private List<string> titles = new List<string>();
-
 		private List<string> urls = new List<string>();
 
 		//Корзина
@@ -107,26 +122,32 @@ namespace BotFFlowers
 		[Action("/start", "Меню")]
 		public void Start()
 		{
-			SQLiteConnection USER = new SQLiteConnection("Data Source=DBFlowers.db;");
-			USER.Open();
-			SQLiteCommand cart_table = USER.CreateCommand();
-			cart_table.CommandText =
-				$"CREATE TABLE IF NOT EXISTS  cart{ChatId.ToString()} ( Id TEXT, Name TEXT, Price TEXT)";
-			cart_table.ExecuteNonQuery();
-			SQLiteCommand data_table = USER.CreateCommand();
-			data_table.CommandText =
-				$"CREATE TABLE IF NOT EXISTS  data{ChatId.ToString()} ( Id TEXT, C_name TEXT, C_number TEXT, R_name TEXT, R_number TEXT, Address TEXT, Additional TEXT)";
-			data_table.ExecuteNonQuery();
-			USER.Close();
-			//Проверка на админа
-			if (ChatId.ToString().Equals(admin_chatid) || ChatId.ToString().Equals(admin_chatid2))
+			NpgsqlConnection DB_Access = new NpgsqlConnection(PostgresConnectionString);
+			DB_Access.Open();
+			NpgsqlCommand check_access = DB_Access.CreateCommand();
+			check_access.CommandText = "SELECT * FROM public.\"AdminAccess\";";
+			var access_reader = check_access.ExecuteReader();
+			bool isAdmin = false;
+			while (access_reader.Read())
 			{
-				PushL($"✋ Привет, {Context.GetUserFullName()}!\n\n⚪ <b>Панель админа + CMS</b>");
+				if (isAdmin == false)
+				{
+					isAdmin = ChatId.ToString().Equals(access_reader["ChatId"].ToString());
+				}
+			}
+			//Проверка на админа
+			if (isAdmin)
+			{
+				PushL($"✋ Привет, {Context.GetUserFullName()}!\n\n⚪ <b>Панель админа</b>");
 				RowButton("💁 Режим обычного пользователя", Q(StartAdmin));
 				RowButton("🗾 Показать товары", Q(ReadTable));
 				RowButton("✅ Добавить товар", Q(CMS_ADD));
 				RowButton("❌ Удалить товар", Q(CMS_DELETE));
 				RowButton("📱 Изменить товар", Q(Edit_product));
+				RowButton("📄 Экспорт отчета в Excel");//ShowAdmins
+				RowButton("💁💁 Показать администраторов",Q(ShowAdmins));
+				RowButton("✅💁 Добавление администратора",Q(Admin_Add));
+				RowButton("❌💁 Удаление администратора",Q(RemoveAdmin));
 				RowButton("🔄 Обновить товары", Q(RefreshItems));
 			}
 			else
@@ -140,12 +161,12 @@ namespace BotFFlowers
 				RowButton("🌸  Цветы в коробках", Q(PressBoxes));
 				RowButton("💐  Букеты", Q(PressBouqets));
 				RowButton("🧺  Корзины", Q(PressBaskets));
-				RowButton("🧸  Мягкие игрушки", Q(PushItem, header_toys, 0, 999999, table_toys));
-				RowButton("🎈  Воздушные шары", Q(PushItem, header_baloons, 0, 999999, table_baloons));
-				RowButton("🍬  Конфеты", Q(PushItem, header_candy, 0, 999999, table_candy));
-				RowButton("🎂  Торты", Q(PushItem, header_cakes, 0, 999999, table_cakes));
-				RowButton("🍏  Фрукты", Q(PushItem, header_fruits, 0, 999999, table_fruits));
-				RowButton("🗾  Открытки", Q(PushItem, header_postcards, 0, 999999, table_postcards));
+				RowButton("🧸  Мягкие игрушки", Q(PushItem, header_toys, 0, 999999, table_toys_cat));
+				RowButton("🎈  Воздушные шары", Q(PushItem, header_baloons, 0, 999999, table_baloons_cat));
+				RowButton("🍬  Конфеты", Q(PushItem, header_candy, 0, 999999, table_candy_cat));
+				RowButton("🎂  Торты", Q(PushItem, header_cakes, 0, 999999, table_cakes_cat));
+				RowButton("🍏  Фрукты", Q(PushItem, header_fruits, 0, 999999, table_fruits_cat));
+				RowButton("🗾  Открытки", Q(PushItem, header_postcards, 0, 999999, table_postcards_cat));
 				RowButton("🚚 Доставка", Q(PressDelivery));
 				RowButton("🛒 Корзина", Q(PressMainBasket));
 				Button("⭐ Отзывы", Q(PressRate));
@@ -166,12 +187,12 @@ namespace BotFFlowers
 			RowButton("🌸  Цветы в коробках", Q(PressBoxes));
 			RowButton("💐  Букеты", Q(PressBouqets));
 			RowButton("🧺  Корзины", Q(PressBaskets));
-			RowButton("🧸  Мягкие игрушки", Q(PushItem, header_toys, 0, 999999, table_toys));
-			RowButton("🎈  Воздушные шары", Q(PushItem, header_baloons, 0, 999999, table_baloons));
-			RowButton("🍬  Конфеты", Q(PushItem, header_candy, 0, 999999, table_candy));
-			RowButton("🎂  Торты", Q(PushItem, header_cakes, 0, 999999, table_cakes));
-			RowButton("🍏  Фрукты", Q(PushItem, header_fruits, 0, 999999, table_fruits));
-			RowButton("🗾  Открытки", Q(PushItem, header_postcards, 0, 999999, table_postcards));
+			RowButton("🧸  Мягкие игрушки", Q(PushItem, header_toys, 0, 999999, table_toys_cat));
+			RowButton("🎈  Воздушные шары", Q(PushItem, header_baloons, 0, 999999, table_baloons_cat));
+			RowButton("🍬  Конфеты", Q(PushItem, header_candy, 0, 999999, table_candy_cat));
+			RowButton("🎂  Торты", Q(PushItem, header_cakes, 0, 999999, table_cakes_cat));
+			RowButton("🍏  Фрукты", Q(PushItem, header_fruits, 0, 999999, table_fruits_cat));
+			RowButton("🗾  Открытки", Q(PushItem, header_postcards, 0, 999999, table_postcards_cat));
 			RowButton("🚚 Доставка", Q(PressDelivery));
 			RowButton("🛒 Корзина", Q(PressMainBasket));
 			Button("⭐ Отзывы", Q(PressRate));
@@ -214,11 +235,11 @@ namespace BotFFlowers
 		{
 			PushL("<b>Ценовые категории:</b>");
 			RowButton("⏪ Назад", Q(Start));
-			RowButton("🟩 До 1500 рублей 🟩", Q(PushItem, header_tulps, 0, 1500, table_tulps));
-			RowButton("🟩 От 1500 До 2500 рублей 🟩", Q(PushItem, header_tulps, 1500, 2500, table_tulps));
-			RowButton("🟩 От 2500 До 3500 рублей 🟩", Q(PushItem, header_tulps, 2500, 3500, table_tulps));
-			RowButton("🟩 От 3500 До 5000 рублей 🟩", Q(PushItem, header_tulps, 3500, 5000, table_tulps));
-			RowButton("🟩 5000 рублей и выше 🟩", Q(PushItem, header_tulps, 5000, 999999, table_tulps));
+			RowButton("🟩 До 1500 рублей 🟩", Q(PushItem, header_tulps, 0, 1500, table_tulps_cat));
+			RowButton("🟩 От 1500 До 2500 рублей 🟩", Q(PushItem, header_tulps, 1500, 2500, table_tulps_cat));
+			RowButton("🟩 От 2500 До 3500 рублей 🟩", Q(PushItem, header_tulps, 2500, 3500, table_tulps_cat));
+			RowButton("🟩 От 3500 До 5000 рублей 🟩", Q(PushItem, header_tulps, 3500, 5000, table_tulps_cat));
+			RowButton("🟩 5000 рублей и выше 🟩", Q(PushItem, header_tulps, 5000, 999999, table_tulps_cat));
 		}
 
 		//Российские розы
@@ -227,10 +248,10 @@ namespace BotFFlowers
 		{
 			PushL("<b>Ценовые категории:</b>");
 			RowButton("⏪ Назад", Q(Start));
-			RowButton("🟩 От 1600 До 2500 рублей 🟩", Q(PushItem, header_roses, 1600, 2500, table_roses));
-			RowButton("🟩 От 2500 До 3500 рублей 🟩", Q(PushItem, header_roses, 2500, 3500, table_roses));
-			RowButton("🟩 От 3500 До 5000 рублей 🟩", Q(PushItem, header_roses, 3500, 5000, table_roses));
-			RowButton("🟩 5000 рублей и выше 🟩", Q(PushItem, header_roses, 5000, 999999, table_roses));
+			RowButton("🟩 От 1600 До 2500 рублей 🟩", Q(PushItem, header_roses, 1600, 2500, table_roses_cat));
+			RowButton("🟩 От 2500 До 3500 рублей 🟩", Q(PushItem, header_roses, 2500, 3500, table_roses_cat));
+			RowButton("🟩 От 3500 До 5000 рублей 🟩", Q(PushItem, header_roses, 3500, 5000, table_roses_cat));
+			RowButton("🟩 5000 рублей и выше 🟩", Q(PushItem, header_roses, 5000, 999999, table_roses_cat));
 		}
 
 		[Action]
@@ -238,10 +259,10 @@ namespace BotFFlowers
 		{
 			PushL("<b>Ценовые категории:</b>");
 			RowButton("⏪ Назад", Q(Start));
-			RowButton("🟩 От 1700 До 2500 рублей 🟩", Q(PushItem, header_equadorroses, 1700, 2500, table_equadorroses));
-			RowButton("🟩 От 2500 До 3500 рублей 🟩", Q(PushItem, header_equadorroses, 2500, 3500, table_equadorroses));
-			RowButton("🟩 От 3500 До 5000 рублей 🟩", Q(PushItem, header_equadorroses, 3500, 5000, table_equadorroses));
-			RowButton("🟩 5000 рублей и выше 🟩", Q(PushItem, header_equadorroses, 5000, 999999, table_equadorroses));
+			RowButton("🟩 От 1700 До 2500 рублей 🟩", Q(PushItem, header_equadorroses, 1700, 2500, table_equadorroses_cat));
+			RowButton("🟩 От 2500 До 3500 рублей 🟩", Q(PushItem, header_equadorroses, 2500, 3500, table_equadorroses_cat));
+			RowButton("🟩 От 3500 До 5000 рублей 🟩", Q(PushItem, header_equadorroses, 3500, 5000, table_equadorroses_cat));
+			RowButton("🟩 5000 рублей и выше 🟩", Q(PushItem, header_equadorroses, 5000, 999999, table_equadorroses_cat));
 		}
 
 		//Цветы в коробках
@@ -250,10 +271,10 @@ namespace BotFFlowers
 		{
 			PushL("<b>Ценовые категории:</b>");
 			RowButton("⏪ Назад", Q(Start));
-			RowButton("🟩 От 1600 До 2500 рублей 🟩", Q(PushItem, header_boxes, 1600, 2500, table_boxes));
-			RowButton("🟩 От 2500 До 3500 рублей 🟩", Q(PushItem, header_boxes, 2500, 3500, table_boxes));
-			RowButton("🟩 От 3500 До 5000 рублей 🟩", Q(PushItem, header_boxes, 3500, 5000, table_boxes));
-			RowButton("🟩 5000 рублей и выше 🟩", Q(PushItem, header_boxes, 5000, 999999, table_boxes));
+			RowButton("🟩 От 1600 До 2500 рублей 🟩", Q(PushItem, header_boxes, 1600, 2500, table_boxes_cat));
+			RowButton("🟩 От 2500 До 3500 рублей 🟩", Q(PushItem, header_boxes, 2500, 3500, table_boxes_cat));
+			RowButton("🟩 От 3500 До 5000 рублей 🟩", Q(PushItem, header_boxes, 3500, 5000, table_boxes_cat));
+			RowButton("🟩 5000 рублей и выше 🟩", Q(PushItem, header_boxes, 5000, 999999, table_boxes_cat));
 		}
 
 		//Букеты
@@ -262,11 +283,11 @@ namespace BotFFlowers
 		{
 			PushL("<b>Категории:</b>");
 			RowButton("⏪ Назад", Q(Start));
-			RowButton("🟩 До 1500 рублей 🟩", Q(PushItem, header_bouqets, 0, 1500, table_bouqets));
-			RowButton("🟩 От 1500 До 2500 рублей 🟩", Q(PushItem, header_bouqets, 1500, 2500, table_bouqets));
-			RowButton("🟩 От 2500 До 3500 рублей 🟩", Q(PushItem, header_bouqets, 2500, 3500, table_bouqets));
-			RowButton("🟩 От 3500 До 5000 рублей 🟩", Q(PushItem, header_bouqets, 3500, 5000, table_bouqets));
-			RowButton("🟩 5000 рублей и выше 🟩", Q(PushItem, header_bouqets, 5000, 999999, table_bouqets));
+			RowButton("🟩 До 1500 рублей 🟩", Q(PushItem, header_bouqets, 0, 1500, table_bouqets_cat));
+			RowButton("🟩 От 1500 До 2500 рублей 🟩", Q(PushItem, header_bouqets, 1500, 2500, table_bouqets_cat));
+			RowButton("🟩 От 2500 До 3500 рублей 🟩", Q(PushItem, header_bouqets, 2500, 3500, table_bouqets_cat));
+			RowButton("🟩 От 3500 До 5000 рублей 🟩", Q(PushItem, header_bouqets, 3500, 5000, table_bouqets_cat));
+			RowButton("🟩 5000 рублей и выше 🟩", Q(PushItem, header_bouqets, 5000, 999999, table_bouqets_cat));
 		}
 
 		//Корзины
@@ -275,10 +296,10 @@ namespace BotFFlowers
 		{
 			PushL("<b>Ценовые категории:</b>");
 			RowButton("⏪ Назад", Q(Start));
-			RowButton("🟩 До 2500 рублей 🟩", Q(PushItem, header_baskets, 0, 2500, table_baskets));
-			RowButton("🟩 От 2500 До 4000 рублей 🟩", Q(PushItem, header_baskets, 2500, 4000, table_baskets));
-			RowButton("🟩 От 4000 До 7000 рублей 🟩", Q(PushItem, header_baskets, 4000, 7000, table_baskets));
-			RowButton("🟩 7000 рублей и выше 🟩", Q(PushItem, header_baskets, 7000, 999999, table_baskets));
+			RowButton("🟩 До 2500 рублей 🟩", Q(PushItem, header_baskets, 0, 2500, table_baskets_cat));
+			RowButton("🟩 От 2500 До 4000 рублей 🟩", Q(PushItem, header_baskets, 2500, 4000, table_baskets_cat));
+			RowButton("🟩 От 4000 До 7000 рублей 🟩", Q(PushItem, header_baskets, 4000, 7000, table_baskets_cat));
+			RowButton("🟩 7000 рублей и выше 🟩", Q(PushItem, header_baskets, 7000, 999999, table_baskets_cat));
 		}
 
 
@@ -320,22 +341,22 @@ namespace BotFFlowers
 		[Action]
 		public async void Instagram()
 		{
-			SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
+			NpgsqlConnection DB = new NpgsqlConnection(PostgresConnectionString);
 			DB.Open();
-			SQLiteCommand create = DB.CreateCommand();
-			create.CommandText = "SELECT * FROM Products";
-			SQLiteDataReader reader = create.ExecuteReader();
+			NpgsqlCommand create = DB.CreateCommand();
+			create.CommandText = "SELECT * FROM public.\"LimitedProducts\"";
+			var reader = create.ExecuteReader();
 			while (reader.Read())
 			{
-				SendCMS(reader["Guid"].ToString(), reader["Image"].ToString(), reader["Text"].ToString(),
-					reader["Price"].ToString());
+				SendCMS(Convert.ToInt32(reader["Id"]), reader["Image"].ToString(), reader["Name"].ToString(),
+					reader["Price"].ToString(),reader["Description"].ToString());
 			}
 
 			DB.Close();
 		}
 
 		//Отправка товаров CMS юзерам
-		public async Task SendCMS(string guid, string _imgurl, string _itemname, string _price)
+		public async Task SendCMS(int guid, string _imgurl, string _itemname, string _price,string _description)
 		{
 			InlineKeyboardMarkup inlineKeyboard = new(
 				new[]
@@ -344,7 +365,7 @@ namespace BotFFlowers
 				}
 			);
 			await Client.SendPhotoAsync(ChatId, _imgurl,
-				$"<b>{_itemname}</b>\n\nЦена: {_price}\n\n🚚 Доставка или самовывоз",
+				$"<b>{_itemname}</b>\n\n{_price}\n\nЦена: {_price} ₽\n\n🚚 Доставка или самовывоз",
 				Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: inlineKeyboard);
 		}
 
@@ -352,10 +373,10 @@ namespace BotFFlowers
 		[Action]
 		private async void ReadTable()
 		{
-			SQLiteConnection check_connection = new SQLiteConnection("Data Source=DBFlowers.db;");
+			NpgsqlConnection check_connection = new NpgsqlConnection(PostgresConnectionString);
 			check_connection.Open();
-			SQLiteCommand check_command = check_connection.CreateCommand();
-			check_command.CommandText = "SELECT count(rowid) FROM Products";
+			NpgsqlCommand check_command = check_connection.CreateCommand();
+			check_command.CommandText = "SELECT count(*) FROM public.\"LimitedProducts\"";
 			check_command.ExecuteNonQuery();
 			int countRows = (int) (long) check_command.ExecuteScalar();
 			check_connection.Close();
@@ -365,16 +386,16 @@ namespace BotFFlowers
 			}
 			else
 			{
-				SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
+				NpgsqlConnection DB = new NpgsqlConnection(PostgresConnectionString);
 				DB.Open();
-				SQLiteCommand create = DB.CreateCommand();
-				create.CommandText = "SELECT * FROM Products";
-				SQLiteDataReader reader = create.ExecuteReader();
+				NpgsqlCommand create = DB.CreateCommand();
+				create.CommandText = "SELECT * FROM public.\"LimitedProducts\"";
+				var reader = create.ExecuteReader();
 				while (reader.Read())
 				{
 					await Client.SendPhotoAsync(ChatId, (InputOnlineFile)reader["Image"].ToString(),
 						caption:
-						$"ID:{reader["Id"]}\n<b>{reader["Text"]}</b>\n\nЦена: {reader["Price"]}\n\n🚚 Доставка или самовывоз",
+						$"ID:{reader["Id"]}\n<b>{reader["Name"]}</b>\n\nОписание: {reader["Description"]}\n\nЦена: {reader["Price"]} ₽\n\n🚚 Доставка или самовывоз",
 						ParseMode.Html);
 				}
 
@@ -425,12 +446,14 @@ namespace BotFFlowers
 
 			PushL("Добавь название товара:");
 			await Send();
-			temp_cms.Text = await AwaitText();
+			temp_cms.Name = await AwaitText();
+			PushL("Добавь описание товара:");
+			await Send();
+			temp_cms.Description = await AwaitText();
 			PushL("Добавь стоимость товара:");
 			await Send();
-			temp_cms.Price = await AwaitText() + " ₽";
-			string guid = Guid.NewGuid().ToString("N");
-			temp_cms.guid = guid;
+			temp_cms.Price = await AwaitText();
+			
 			await Client.SendTextMessageAsync(ChatId, $"Карточка товара сформирована!", ParseMode.Html,
 				replyMarkup: product_sample);
 		}
@@ -442,11 +465,12 @@ namespace BotFFlowers
 
 			var product = new Products();
 			product.Image = temp_cms.Img;
-			product.Text = temp_cms.Text;
+			product.Name = temp_cms.Name;
 			product.Price = temp_cms.Price;
-			product.guid = temp_cms.guid;
+			product.Description = temp_cms.Description;
+			
 			AddProduct(product);
-			await Client.SendTextMessageAsync(ChatId, $"✅ Товар {product.Text} успешно добавлен в категорию!");
+			await Client.SendTextMessageAsync(ChatId, $"✅ Товар {product.Name} успешно добавлен в категорию!");
 		}
 
 		//Предпросмотр карточки
@@ -462,7 +486,7 @@ namespace BotFFlowers
 			);
 			//await Client.SendTextMessageAsync(ChatId, $"Картинка {temp_cms.Img}\nТекст{temp_cms.Text}\nЦена{temp_cms.Price}", replyMarkup: add_markup);
 			await Client.SendPhotoAsync(ChatId, temp_cms.Img,
-				caption: $"<b>{temp_cms.Text}</b>\n\nЦена: {temp_cms.Price}\n\n🚚 Доставка или самовывоз",
+				caption: $"<b>{temp_cms.Name}</b>\n\n{temp_cms.Description}\n\nЦена: {temp_cms.Price}\n\n🚚 Доставка или самовывоз",
 				ParseMode.Html);
 		}
 
@@ -501,10 +525,13 @@ namespace BotFFlowers
 
 			PushL("Новое название товара:");
 			await Send();
-			new_product.Text = await AwaitText();
+			new_product.Name = await AwaitText();
+			PushL("Новое описание товара:");
+			await Send();
+			new_product.Description = await AwaitText();
 			PushL("Новая стоимость товара:");
 			await Send();
-			new_product.Price = await AwaitText() + " ₽";
+			new_product.Price = await AwaitText();
 			new_product.Id = id;
 			EditProduct(new_product);
 			await Client.SendTextMessageAsync(ChatId, "✅ Карточка товара изменена!", ParseMode.Html,
@@ -549,11 +576,11 @@ namespace BotFFlowers
 		{
 			int numberOfRowsAffected;
 
-			using (var con = new SQLiteConnection("Data Source=DBFlowers.db"))
+			using (var con = new NpgsqlConnection(PostgresConnectionString))
 			{
 				con.Open();
 
-				using (var cmd = new SQLiteCommand(query, con))
+				using (var cmd = new NpgsqlCommand(query, con))
 				{
 					foreach (var pair in args)
 					{
@@ -573,17 +600,17 @@ namespace BotFFlowers
 			if (string.IsNullOrEmpty(query.Trim()))
 				return null;
 
-			using (var con = new SQLiteConnection("Data Source=DBFlowers.db"))
+			using (var con = new NpgsqlConnection(PostgresConnectionString))
 			{
 				con.Open();
-				using (var cmd = new SQLiteCommand(query, con))
+				using (var cmd = new NpgsqlCommand(query, con))
 				{
 					foreach (KeyValuePair<string, object> entry in args)
 					{
 						cmd.Parameters.AddWithValue(entry.Key, entry.Value);
 					}
-
-					var da = new SQLiteDataAdapter(cmd);
+					
+					var da = new NpgsqlDataAdapter(cmd);
 					var dt = new DataTable();
 					da.Fill(dt);
 					da.Dispose();
@@ -595,14 +622,14 @@ namespace BotFFlowers
 		//Добавление элемента
 		private int AddProduct(Products product)
 		{
-			const string query = "INSERT INTO Products(Image, Text,Price,Guid) VALUES(@Image, @Text,@Price,@Guid)";
+			 string query = $"INSERT INTO public.\"LimitedProducts\"(\"Name\", \"Price\", \"Description\", \"Image\") VALUES(@Name, {product.Price},@Description,@Image)";
 
 			var args = new Dictionary<string, object>
 			{
-				{"@Image", product.Image},
-				{"@Text", product.Text},
-				{"@Price", product.Price},
-				{"@Guid", product.guid}
+				{"@Name", product.Name},
+				
+				{"@Description", product.Description},
+				{"@Image", product.Image}
 			};
 
 			return ExecuteWrite(query, args);
@@ -611,14 +638,16 @@ namespace BotFFlowers
 		//Изменение элемента по ID
 		private int EditProduct(Products product)
 		{
-			const string query = "UPDATE Products SET Image = @Image, Text = @Text, Price = @Price WHERE Id = @id";
-
+			//const string query = "UPDATE Products SET Image = @Image, Text = @Text, Price = @Price WHERE Id = @id";
+			 string query = $"UPDATE public.\"LimitedProducts\" SET \"Name\"=@Name, \"Price\"={product.Price}, \"Description\"=@Description, \"Image\"=@Image WHERE \"Id\" = {product.Id}";
 			var args = new Dictionary<string, object>
 			{
-				{"@id", product.Id},
-				{"@Text", product.Text},
-				{"@Image", product.Image},
-				{"@Price", product.Price}
+				
+				{"@Name", product.Name},
+				{"@Description", product.Description},
+				{"@Image", product.Image}
+				
+				
 			};
 
 			return ExecuteWrite(query, args);
@@ -627,11 +656,11 @@ namespace BotFFlowers
 
 		private int DeleteProduct(int id)
 		{
-			const string query = "Delete from Products WHERE Id = @id";
+			const string query = "DELETE FROM public.\"LimitedProducts\" WHERE \"Id\" = @Id";
 
 			var args = new Dictionary<string, object>
 			{
-				{"@id", id}
+				{"@Id", id}
 			};
 
 			return ExecuteWrite(query, args);
@@ -640,11 +669,11 @@ namespace BotFFlowers
 		//Получение элемента по ID
 		private Products GetProductById(int id)
 		{
-			var query = "SELECT * FROM Products WHERE Id = @id";
+			var query = "SELECT * FROM public.\"LimitedProducts\" WHERE \"Id\" = @Id";
 
 			var args = new Dictionary<string, object>
 			{
-				{"@id", id}
+				{"@Id", id}
 			};
 			DataTable dt = ExecuteRead(query, args);
 			if (dt == null || dt.Rows.Count == 0)
@@ -656,7 +685,8 @@ namespace BotFFlowers
 			{
 				Id = Convert.ToInt32(dt.Rows[0]["Id"]),
 				Image = Convert.ToString(dt.Rows[0]["Image"]),
-				Text = Convert.ToString(dt.Rows[0]["Text"]),
+				Name = Convert.ToString(dt.Rows[0]["Name"]),
+				Description = Convert.ToString(dt.Rows[0]["Description"]),
 				Price = Convert.ToString(dt.Rows[0]["Price"])
 			};
 			return product;
@@ -672,10 +702,9 @@ namespace BotFFlowers
 		//Парсинг
 		public void ParseItem(string _baseurl, string header, string table_name)
 		{
-			SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
-			urls.Clear();
-			titles.Clear();
-			prices.Clear();
+			
+			NpgsqlConnection DB = new NpgsqlConnection(PostgresConnectionString);
+			
 			HtmlDocument HD = new HtmlDocument();
 			var web = new HtmlWeb
 			{
@@ -685,11 +714,14 @@ namespace BotFFlowers
 			HD = web.Load(_baseurl + header);
 			HtmlNodeCollection PricesElements = HD.DocumentNode.SelectNodes("//div[@class='product-item-price']");
 			HtmlNodeCollection TitlesElements = HD.DocumentNode.SelectNodes("//div[@class='product-item__link']//a");
-			HtmlNodeCollection UrlsElements =
-				HD.DocumentNode.SelectNodes("//div[@class='product-item__content']//picture//img");
+			HtmlNodeCollection UrlsElements = HD.DocumentNode.SelectNodes("//div[@class='product-item__content']//picture//img");
 			// Проверяем наличие узлов
-			if (PricesElements != null)
+			if (PricesElements != null && TitlesElements!=null && UrlsElements!=null)
 			{
+				urls.Clear();
+				titles.Clear();
+				prices.Clear();
+				//Fill Prices collection
 				foreach (HtmlNode HN in PricesElements)
 				{
 					// Получаем строчки
@@ -697,235 +729,48 @@ namespace BotFFlowers
 					prices.Add(outputText);
 
 				}
-
-			}
-
-			if (TitlesElements != null)
-			{
+				//Fill Titles collection
 				foreach (HtmlNode Title in TitlesElements)
 				{
 					string outputText = Title.InnerText;
 					titles.Add(outputText);
 				}
-			}
-
-			if (UrlsElements != null)
-			{
+				//Fill Urls collection
 				foreach (HtmlNode Url in UrlsElements)
 				{
 					string outputText = Url.GetAttributeValue("src", "");
 					urls.Add("https:" + outputText);
 				}
 			}
-
-			switch (table_name)
+			
+			if (prices.Count != 0 && titles.Count != 0 && urls.Count != 0)
 			{
-				case "tulpany":
-					for (int i = 0; i < prices.Count; i++)
-					{
-						string id = i.ToString();
-						DB.Open();
-						SQLiteCommand add = DB.CreateCommand();
-						add.CommandText = $"INSERT INTO tulpany VALUES(@Id, @Image,@Name,@Price)";
-						add.Parameters.AddWithValue("@Id", id);
-						add.Parameters.AddWithValue("@Image", urls.ElementAt(i));
-						add.Parameters.AddWithValue("@Name", titles.ElementAt(i));
-						add.Parameters.AddWithValue("@Price", prices.ElementAt(i));
-						add.ExecuteNonQuery();
-						DB.Close();
-					}
-
-					break;
-				case "rossiyskierozy":
-					for (int i = 0; i < prices.Count; i++)
-					{
-						string id = i.ToString();
-						DB.Open();
-						SQLiteCommand add = DB.CreateCommand();
-						add.CommandText = $"INSERT INTO rossiyskierozy VALUES(@Id, @Image,@Name,@Price)";
-						add.Parameters.AddWithValue("@Id", id);
-						add.Parameters.AddWithValue("@Image", urls.ElementAt(i));
-						add.Parameters.AddWithValue("@Name", titles.ElementAt(i));
-						add.Parameters.AddWithValue("@Price", prices.ElementAt(i));
-						add.ExecuteNonQuery();
-						DB.Close();
-					}
-
-					break;
-				case "gollandskierozy":
-					for (int i = 0; i < prices.Count; i++)
-					{
-						string id = i.ToString();
-						DB.Open();
-						SQLiteCommand add = DB.CreateCommand();
-						add.CommandText = $"INSERT INTO gollandskierozy VALUES(@Id, @Image,@Name,@Price)";
-						add.Parameters.AddWithValue("@Id", id);
-						add.Parameters.AddWithValue("@Image", urls.ElementAt(i));
-						add.Parameters.AddWithValue("@Name", titles.ElementAt(i));
-						add.Parameters.AddWithValue("@Price", prices.ElementAt(i));
-						add.ExecuteNonQuery();
-						DB.Close();
-					}
-
-					break;
-				case "cvetivkorobkah":
-					for (int i = 0; i < prices.Count; i++)
-					{
-						string id = i.ToString();
-						DB.Open();
-						SQLiteCommand add = DB.CreateCommand();
-						add.CommandText = $"INSERT INTO cvetivkorobkah VALUES(@Id, @Image,@Name,@Price)";
-						add.Parameters.AddWithValue("@Id", id);
-						add.Parameters.AddWithValue("@Image", urls.ElementAt(i));
-						add.Parameters.AddWithValue("@Name", titles.ElementAt(i));
-						add.Parameters.AddWithValue("@Price", prices.ElementAt(i));
-						add.ExecuteNonQuery();
-						DB.Close();
-					}
-
-					break;
-				case "bukety":
-					for (int i = 0; i < prices.Count; i++)
-					{
-						string id = i.ToString();
-						DB.Open();
-						SQLiteCommand add = DB.CreateCommand();
-						add.CommandText = $"INSERT INTO bukety VALUES(@Id, @Image,@Name,@Price)";
-						add.Parameters.AddWithValue("@Id", id);
-						add.Parameters.AddWithValue("@Image", urls.ElementAt(i));
-						add.Parameters.AddWithValue("@Name", titles.ElementAt(i));
-						add.Parameters.AddWithValue("@Price", prices.ElementAt(i));
-						add.ExecuteNonQuery();
-						DB.Close();
-					}
-
-					break;
-				case "korziny":
-					for (int i = 0; i < prices.Count; i++)
-					{
-						string id = i.ToString();
-						DB.Open();
-						SQLiteCommand add = DB.CreateCommand();
-						add.CommandText = $"INSERT INTO korziny VALUES(@Id, @Image,@Name,@Price)";
-						add.Parameters.AddWithValue("@Id", id);
-						add.Parameters.AddWithValue("@Image", urls.ElementAt(i));
-						add.Parameters.AddWithValue("@Name", titles.ElementAt(i));
-						add.Parameters.AddWithValue("@Price", prices.ElementAt(i));
-						add.ExecuteNonQuery();
-						DB.Close();
-					}
-
-					break;
-				case "plusheviemishki":
-					for (int i = 0; i < prices.Count; i++)
-					{
-						string id = i.ToString();
-						DB.Open();
-						SQLiteCommand add = DB.CreateCommand();
-						add.CommandText = $"INSERT INTO plusheviemishki VALUES(@Id, @Image,@Name,@Price)";
-						add.Parameters.AddWithValue("@Id", id);
-						add.Parameters.AddWithValue("@Image", urls.ElementAt(i));
-						add.Parameters.AddWithValue("@Name", titles.ElementAt(i));
-						add.Parameters.AddWithValue("@Price", prices.ElementAt(i));
-						add.ExecuteNonQuery();
-						DB.Close();
-					}
-
-					break;
-				case "vozdushnieshary":
-					for (int i = 0; i < prices.Count; i++)
-					{
-						string id = i.ToString();
-						DB.Open();
-						SQLiteCommand add = DB.CreateCommand();
-						add.CommandText = $"INSERT INTO vozdushnieshary VALUES(@Id, @Image,@Name,@Price)";
-						add.Parameters.AddWithValue("@Id", id);
-						add.Parameters.AddWithValue("@Image", urls.ElementAt(i));
-						add.Parameters.AddWithValue("@Name", titles.ElementAt(i));
-						add.Parameters.AddWithValue("@Price", prices.ElementAt(i));
-						add.ExecuteNonQuery();
-						DB.Close();
-					}
-
-					break;
-				case "konfety":
-					for (int i = 0; i < prices.Count; i++)
-					{
-						string id = i.ToString();
-						DB.Open();
-						SQLiteCommand add = DB.CreateCommand();
-						add.CommandText = $"INSERT INTO konfety VALUES(@Id, @Image,@Name,@Price)";
-						add.Parameters.AddWithValue("@Id", id);
-						add.Parameters.AddWithValue("@Image", urls.ElementAt(i));
-						add.Parameters.AddWithValue("@Name", titles.ElementAt(i));
-						add.Parameters.AddWithValue("@Price", prices.ElementAt(i));
-						add.ExecuteNonQuery();
-						DB.Close();
-					}
-
-					break;
-				case "torty":
-					for (int i = 0; i < prices.Count; i++)
-					{
-						string id = i.ToString();
-						DB.Open();
-						SQLiteCommand add = DB.CreateCommand();
-						add.CommandText = $"INSERT INTO torty VALUES(@Id, @Image,@Name,@Price)";
-						add.Parameters.AddWithValue("@Id", id);
-						add.Parameters.AddWithValue("@Image", urls.ElementAt(i));
-						add.Parameters.AddWithValue("@Name", titles.ElementAt(i));
-						add.Parameters.AddWithValue("@Price", prices.ElementAt(i));
-						add.ExecuteNonQuery();
-						DB.Close();
-					}
-
-					break;
-				case "fruktyvkorzine":
-					for (int i = 0; i < prices.Count; i++)
-					{
-						string id = i.ToString();
-						DB.Open();
-						SQLiteCommand add = DB.CreateCommand();
-						add.CommandText = $"INSERT INTO fruktyvkorzine VALUES(@Id, @Image,@Name,@Price)";
-						add.Parameters.AddWithValue("@Id", id);
-						add.Parameters.AddWithValue("@Image", urls.ElementAt(i));
-						add.Parameters.AddWithValue("@Name", titles.ElementAt(i));
-						add.Parameters.AddWithValue("@Price", prices.ElementAt(i));
-						add.ExecuteNonQuery();
-						DB.Close();
-					}
-
-					break;
-				case "otkrytki":
-					for (int i = 0; i < prices.Count; i++)
-					{
-						string id = i.ToString();
-						DB.Open();
-						SQLiteCommand add = DB.CreateCommand();
-						add.CommandText = $"INSERT INTO otkrytki VALUES(@Id, @Image,@Name,@Price)";
-						add.Parameters.AddWithValue("@Id", id);
-						add.Parameters.AddWithValue("@Image", urls.ElementAt(i));
-						add.Parameters.AddWithValue("@Name", titles.ElementAt(i));
-						add.Parameters.AddWithValue("@Price", prices.ElementAt(i));
-						add.ExecuteNonQuery();
-						DB.Close();
-					}
-					break;
+				DB.Open();
+				NpgsqlCommand cmd = DB.CreateCommand();
+				
+				for (int i = 0; i < prices.Count; i++)
+				{
+					cmd.CommandText = $"INSERT INTO public.\"Products\"(\"ImageURL\", \"Name\", \"Price\", \"CategoryId\") VALUES ( '{urls.ElementAt(i)}','{titles.ElementAt(i)}',{string.Join("", prices.ElementAt(i).Where(c => char.IsDigit(c)))}, (SELECT \"Id\" AS \"CategoryId\" FROM public.\"ProductsCategories\" where \"Name\" = '{table_name}'))";
+					cmd.ExecuteNonQuery();
+					
+				}
+				DB.Close();
 			}
+			
+			
 
 		}
 
 		[Action]
 		public async Task FillProducts()
 		{
-			SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
+			NpgsqlConnection DB = new NpgsqlConnection(PostgresConnectionString);
 			DB.Open();
-			foreach (var item in tables)
-			{
-				SQLiteCommand clear = DB.CreateCommand();
-				clear.CommandText = $"DELETE FROM {item}";
-				clear.ExecuteNonQuery();
-			}
+			
+				NpgsqlCommand cmd = DB.CreateCommand();
+				cmd.CommandText = "DELETE FROM public.\"Products\"";
+				cmd.ExecuteNonQuery();
+			
 			DB.Close();
 			ParseItem(baseurl, header_equadorroses, table_equadorroses);
 			ParseItem(baseurl, header_roses, table_roses);
@@ -969,13 +814,13 @@ namespace BotFFlowers
 
 		//Сортировка и отправка спарсенных товаров
 		[Action]
-		public async Task PushItem(string _header, int from_price, int to_price, string table_name)
+		public async Task PushItem(string _header, int from_price, int to_price, int categoryId)
 		{
 			await Send("⏳ Загрузка товаров...");
-			SQLiteConnection check_connection = new SQLiteConnection("Data Source=DBFlowers.db;");
+			NpgsqlConnection check_connection = new NpgsqlConnection(PostgresConnectionString);
 			check_connection.Open();
-			SQLiteCommand check_command = check_connection.CreateCommand();
-			check_command.CommandText = $"SELECT count(rowid) FROM {table_name}";
+			NpgsqlCommand check_command = check_connection.CreateCommand();
+			check_command.CommandText = $"SELECT count(*) FROM public.\"Products\" WHERE \"CategoryId\" = {categoryId} AND \"Price\" BETWEEN CAST('{from_price}' AS money) AND CAST('{to_price}' AS money)";
 			check_command.ExecuteNonQuery();
 			int countRows = (int) (long) check_command.ExecuteScalar();
 			check_connection.Close();
@@ -985,29 +830,29 @@ namespace BotFFlowers
 			}
 			else
 			{
-				SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
+				NpgsqlConnection DB = new NpgsqlConnection(PostgresConnectionString);
 				DB.Open();
-				SQLiteCommand create = DB.CreateCommand();
-				create.CommandText = $"SELECT * FROM {table_name}";
-				SQLiteDataReader reader = create.ExecuteReader();
+				NpgsqlCommand create = DB.CreateCommand();
+				create.CommandText = $"SELECT * FROM public.\"Products\" WHERE \"CategoryId\" = {categoryId} AND \"Price\" BETWEEN CAST('{from_price}' AS money) AND CAST('{to_price}' AS money)";
+				var reader = create.ExecuteReader();
 				while (reader.Read())
 				{
-					string check = new string(reader["Price"].ToString().Where(t => char.IsDigit(t)).ToArray());
-					int price = Convert.ToInt32(check);
-					if (price >= from_price && price <= to_price)
-					{
+					// string check = new string(reader["Price"].ToString().Where(t => char.IsDigit(t)).ToArray());
+					// int price = Convert.ToInt32(check);
+					// if (price >= from_price && price <= to_price)
+					// {
 						InlineKeyboardMarkup inlineKeyboard = new(
 							new[]
 							{
 								InlineKeyboardButton.WithCallbackData(text: "🛒 В корзину",
-									callbackData: Q(CallDataParse, reader["Id"].ToString(), table_name)),
+									callbackData: Q(CallDataParse, Convert.ToInt32(reader["Id"]))),
 							}
 						);
 
-						await Client.SendPhotoAsync(ChatId, reader["Image"].ToString(),
-							$"<b>{reader["Name"].ToString()}</b>\n\nЦена: {reader["Price"].ToString()}\n\n🚚 Доставка или самовывоз",
+						await Client.SendPhotoAsync(ChatId, reader["ImageURL"].ToString(),
+							$"<b>{reader["Name"].ToString()}</b>\n\nЦена: {reader["Price"].ToString()} ₽\n\n🚚 Доставка или самовывоз",
 							Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: inlineKeyboard);
-					}
+					//}
 				}
 				DB.Close();
 			}
@@ -1021,24 +866,24 @@ namespace BotFFlowers
 		[Action]
 		public async Task PushDelivery()
 		{
-			SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
+			NpgsqlConnection DB = new NpgsqlConnection(PostgresConnectionString);
 			await Client.SendTextMessageAsync(ChatId,
 				"🚚 <b>Выберите зону(ы) доставки</b>\nСтоимость доставки добавится в корзину", ParseMode.Html);
 			DB.Open();
-			SQLiteCommand create = DB.CreateCommand();
-			create.CommandText = "SELECT * FROM Delivery";
-			SQLiteDataReader reader = create.ExecuteReader();
+			NpgsqlCommand create = DB.CreateCommand();
+			create.CommandText = "SELECT * FROM \"Delivery\"";
+			var reader = create.ExecuteReader();
 			while (reader.Read())
 			{
 				InlineKeyboardMarkup inlineKeyboard = new(
 					new[]
 					{
 						InlineKeyboardButton.WithCallbackData(text: "🛒 В корзину",
-							callbackData: Q(DeliveryCall, reader["Guid"].ToString())),
+							callbackData: Q(DeliveryCall, Convert.ToInt32(reader["Id"]))),
 					}
 				);
 				await Client.SendTextMessageAsync(ChatId,
-					$"<b>{reader["Name"].ToString()}</b> : +{reader["Price"].ToString()}", ParseMode.Html,
+					$"<b>{reader["District"].ToString()}</b> : +{reader["Price"].ToString()} ₽", ParseMode.Html,
 					replyMarkup: inlineKeyboard);
 			}
 			DB.Close();
@@ -1052,10 +897,10 @@ namespace BotFFlowers
 		[Action]
 		public async Task CancelDelivery()
 		{
-			SQLiteConnection USER = new SQLiteConnection("Data Source=DBFlowers.db;");
+			NpgsqlConnection USER = new NpgsqlConnection(PostgresConnectionString);
 			USER.Open();
-			SQLiteCommand clear_cart = USER.CreateCommand();
-			clear_cart.CommandText = $"DELETE FROM cart{ChatId.ToString()}";
+			NpgsqlCommand clear_cart = USER.CreateCommand();
+			clear_cart.CommandText = $"DELETE FROM public.\"Cart\" WHERE \"UserId\" = {Convert.ToInt32(ChatId)}";
 			clear_cart.ExecuteNonQuery();
 			USER.Close();
 			Start();
@@ -1063,7 +908,7 @@ namespace BotFFlowers
 
 		//Коллбэк доставки
 		[Action]
-		public async Task DeliveryCall(string guid)
+		public async Task DeliveryCall(int guid)
 		{
 
 			InlineKeyboardMarkup make_order = new InlineKeyboardMarkup(
@@ -1083,26 +928,30 @@ namespace BotFFlowers
 					}
 				}
 			);
-			SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
+			NpgsqlConnection DB = new NpgsqlConnection(PostgresConnectionString);
 			DB.Open();
-			SQLiteCommand create = DB.CreateCommand();
-			create.CommandText = "SELECT * FROM Delivery WHERE Guid = @guid";
-			create.Parameters.AddWithValue("@guid", guid);
-			SQLiteDataReader reader = create.ExecuteReader();
+			NpgsqlConnection DB1 = new NpgsqlConnection(PostgresConnectionString);
+			DB1.Open();
+			NpgsqlCommand create = DB.CreateCommand();
+			create.CommandText = $"SELECT * FROM \"Delivery\" WHERE \"Id\" = {guid}";
+			//create.Parameters.AddWithValue("@guid", guid);
+			var reader = create.ExecuteReader();
 			while (reader.Read())
 			{
-				string _id = ShortId.Generate();
-				SQLiteCommand fillcart = DB.CreateCommand();
-				fillcart.CommandText = $"INSERT INTO cart{ChatId.ToString()} VALUES(@Id,@Name,@Price)";
-				fillcart.Parameters.AddWithValue("@Id", _id);
+				//string _id = ShortId.Generate();
+				NpgsqlCommand fillcart = DB1.CreateCommand();
+				fillcart.CommandText = $"INSERT INTO public.\"Cart\"(\"Name\", \"Price\", \"UserId\") VALUES('{reader["District"].ToString()}',CAST({reader["Price"].ToString()} as MONEY),{Convert.ToInt32(ChatId)})";
+
+				/*fillcart.Parameters.AddWithValue("@Id", _id);
 				fillcart.Parameters.AddWithValue("@Name", "Доставка на " + reader["Name"].ToString());
-				fillcart.Parameters.AddWithValue("@Price", reader["Price"].ToString());
+				fillcart.Parameters.AddWithValue("@Price", reader["Price"].ToString());*/
 				fillcart.ExecuteNonQuery();
 				//shop_cart.Add(new Item("Доставка на "+reader["Name"].ToString(),reader["Price"].ToString()));
-				await Client.SendTextMessageAsync(ChatId, $"✅ Зона доставки {reader["Name"].ToString()} добавлена!",
+				await Client.SendTextMessageAsync(ChatId, $"✅ Зона доставки {reader["District"].ToString()} добавлена!",
 					Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: make_order);
 			}
 			DB.Close();
+			DB1.Close();
 		}
 
 		//Коллбэк полной очистки корзины
@@ -1115,10 +964,10 @@ namespace BotFFlowers
 					InlineKeyboardButton.WithCallbackData(text: "⏪ Меню", callbackData: Q(Start)),
 				}
 			);
-			SQLiteConnection USER = new SQLiteConnection("Data Source=DBFlowers.db;");
+			NpgsqlConnection USER = new NpgsqlConnection(PostgresConnectionString);
 			USER.Open();
-			SQLiteCommand clear_cart = USER.CreateCommand();
-			clear_cart.CommandText = $"DELETE FROM cart{ChatId.ToString()}";
+			NpgsqlCommand clear_cart = USER.CreateCommand();
+			clear_cart.CommandText = $"DELETE FROM public.\"Cart\" WHERE \"UserId\" = {Convert.ToInt32(ChatId)}";
 			clear_cart.ExecuteNonQuery();
 			USER.Close();
 			await Client.SendTextMessageAsync(ChatId, "✅ Корзина очищена", Telegram.Bot.Types.Enums.ParseMode.Html,
@@ -1127,7 +976,7 @@ namespace BotFFlowers
 
 		//Коллбэк спарсенных товаров
 		[Action]
-		public async Task CallDataParse(string id, string table_name)
+		public async Task CallDataParse(int id)
 		{
 			InlineKeyboardMarkup redirect_basket = new(
 
@@ -1138,30 +987,34 @@ namespace BotFFlowers
 				}
 
 			);
-			SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
+			NpgsqlConnection DB = new NpgsqlConnection(PostgresConnectionString);
+			NpgsqlConnection DB1 = new NpgsqlConnection(PostgresConnectionString);
 			DB.Open();
-			SQLiteCommand create = DB.CreateCommand();
-			create.CommandText = $"SELECT * FROM {table_name} WHERE Id = @id";
-			create.Parameters.AddWithValue("@id", id);
-			SQLiteDataReader reader = create.ExecuteReader();
+			DB1.Open();
+			NpgsqlCommand create = DB.CreateCommand();
+			create.CommandText = $"SELECT * FROM public.\"Products\" WHERE \"Id\" = {id}";
+			//create.Parameters.AddWithValue("@id", id);
+			var reader = create.ExecuteReader();
 			while (reader.Read())
 			{
-				string _id = ShortId.Generate();
-				SQLiteCommand fillcart = DB.CreateCommand();
-				fillcart.CommandText = $"INSERT INTO cart{ChatId.ToString()} VALUES(@Id,@Name,@Price)";
-				fillcart.Parameters.AddWithValue("@Id", _id);
-				fillcart.Parameters.AddWithValue("@Name", reader["Name"].ToString());
-				fillcart.Parameters.AddWithValue("@Price", reader["Price"].ToString());
+				//string _id = ShortId.Generate();
+				NpgsqlCommand fillcart = DB1.CreateCommand();
+				fillcart.CommandText = $"INSERT INTO public.\"Cart\"(\"Name\", \"Price\", \"UserId\") VALUES('{reader["Name"].ToString()}',CAST({reader["Price"].ToString()} as MONEY),{Convert.ToInt32(ChatId)})";
+				//fillcart.Parameters.AddWithValue("@Id", id);
+				// fillcart.Parameters.AddWithValue("@Name", reader["Name"].ToString());
+				// fillcart.Parameters.AddWithValue("@Price", reader["Price"].ToString());
+				// fillcart.Parameters.AddWithValue("@Price", reader["Price"].ToString());
 				fillcart.ExecuteNonQuery();
 				await Client.SendTextMessageAsync(ChatId, $"✅ Товар {reader["Name"].ToString()} добавлен в корзину!",
 					Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: redirect_basket);
 			}
 			DB.Close();
+			DB1.Close();
 		}
 
 		//Коллбэк CMS товаров
 		[Action]
-		public async Task CallDataCMS(string id)
+		public async Task CallDataCMS(int id)
 		{
 			InlineKeyboardMarkup redirect_basket = new(
 
@@ -1172,26 +1025,30 @@ namespace BotFFlowers
 				}
 
 			);
-			SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
+			NpgsqlConnection DB = new NpgsqlConnection(PostgresConnectionString);
+			NpgsqlConnection DB1 = new NpgsqlConnection(PostgresConnectionString);
 			DB.Open();
-			SQLiteCommand create = DB.CreateCommand();
-			create.CommandText = "SELECT * FROM Products WHERE Guid = @guid";
-			create.Parameters.AddWithValue("@guid", id);
-			SQLiteDataReader reader = create.ExecuteReader();
+			DB1.Open();
+			NpgsqlCommand create = DB.CreateCommand();
+			create.CommandText = $"SELECT * FROM \"LimitedProducts\" WHERE \"Id\" = {id}";
+			//create.Parameters.AddWithValue("@guid", id);
+			var reader = create.ExecuteReader();
 			while (reader.Read())
 			{
-				string _id = ShortId.Generate();
-				SQLiteCommand fillcart = DB.CreateCommand();
-				fillcart.CommandText = $"INSERT INTO cart{ChatId.ToString()} VALUES(@Id,@Name,@Price)";
-				fillcart.Parameters.AddWithValue("@Id", _id);
-				fillcart.Parameters.AddWithValue("@Name", reader["Text"].ToString());
-				fillcart.Parameters.AddWithValue("@Price", reader["Price"].ToString());
+				//string _id = ShortId.Generate();
+				NpgsqlCommand fillcart = DB1.CreateCommand();
+				fillcart.CommandText = $"INSERT INTO public.\"Cart\"(\"Name\", \"Price\", \"UserId\") VALUES('{reader["Name"].ToString()}',CAST({reader["Price"].ToString()} as MONEY),{Convert.ToInt32(ChatId)})";
+
+				// fillcart.Parameters.AddWithValue("@Id", _id);
+				// fillcart.Parameters.AddWithValue("@Name", reader["Text"].ToString());
+				// fillcart.Parameters.AddWithValue("@Price", reader["Price"].ToString());
 				fillcart.ExecuteNonQuery();
 				//shop_cart.Add(new Item(reader["Text"].ToString(),reader["Price"].ToString()));
-				await Client.SendTextMessageAsync(ChatId, $"✅ Товар {reader["Text"].ToString()} добавлен в корзину!",
+				await Client.SendTextMessageAsync(ChatId, $"✅ Товар {reader["Name"].ToString()} добавлен в корзину!",
 					Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: redirect_basket);
 			}
 			DB.Close();
+			DB1.Close();
 		}
 		#endregion
 
@@ -1203,79 +1060,114 @@ namespace BotFFlowers
 		[Action]
 		public async Task NotificateOrder()
 		{
-			SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
-
+			NpgsqlConnection DB = new NpgsqlConnection(PostgresConnectionString);
+			
 			DB.Open();
-			SQLiteCommand cleardata = DB.CreateCommand();
-			cleardata.CommandText = $"DELETE FROM data{ChatId.ToString()}";
-			cleardata.ExecuteNonQuery();
-			SQLiteCommand add = DB.CreateCommand();
-			add.CommandText =
-				$"INSERT INTO data{ChatId.ToString()} VALUES(@Id, @C_name,@C_number,@R_name,@R_number,@Address,@Additional)";
-			string id = random.Next(500000).ToString();
-			add.Parameters.AddWithValue("@Id", id);
+			
+			// NpgsqlCommand cleardata = DB.CreateCommand();
+			// cleardata.CommandText = $"DELETE FROM data{ChatId.ToString()}";
+			// cleardata.ExecuteNonQuery();
+			NpgsqlCommand add = DB.CreateCommand();
+			
+				
+			string c_name = "";
+			string c_number = "";
+			string r_name = "";
+			string r_number = "";
+			string address = "";
+			string additional = "";
+			//string id = random.Next(500000).ToString();
+			//add.Parameters.AddWithValue("@Id", id);
 			PushL("Пожалуйста, заполните форму ниже 👇");
 			PushL("🙂 Ваше ФИО:");
 			await Send();
-			string c_name = await AwaitText();
+			 c_name = await AwaitText();
 			if (c_name.Equals("/start"))
 			{
 				Start();
 			}
 			else
 			{
-				add.Parameters.AddWithValue("@C_name", c_name);
+				//add.Parameters.AddWithValue("@C_name", c_name);
 				PushL("📱 Ваш номер телефона:");
 				await Send();
-				string c_number = await AwaitText();
+				 c_number = await AwaitText();
 				if (c_number.Equals("/start"))
 				{
 					Start();
 				}
 				else
 				{
-					add.Parameters.AddWithValue("@C_number", c_number);
+					//add.Parameters.AddWithValue("@C_number", c_number);
 					PushL("🙂 ФИО получателя:");
 					await Send();
-					string r_name = await AwaitText();
+					 r_name = await AwaitText();
 					if (r_name.Equals("/start"))
 					{
 						Start();
 					}
 					else
 					{
-						add.Parameters.AddWithValue("@R_name", r_name);
+						//add.Parameters.AddWithValue("@R_name", r_name);
 						PushL("📱 Номер телефона получателя:");
 						await Send();
-						string r_number = await AwaitText();
+						 r_number = await AwaitText();
 						if (r_number.Equals("/start"))
 						{
 							Start();
 						}
 						else
 						{
-							add.Parameters.AddWithValue("@R_number", r_number);
+							//add.Parameters.AddWithValue("@R_number", r_number);
 							PushL("🏠 Адрес получателя:");
-							await Send();
-							string address = await AwaitText();
+							await Send(); address = await AwaitText();
 							if (address.Equals("/start"))
 							{
 								Start();
 							}
 							else
 							{
-								add.Parameters.AddWithValue("@Address", address);
+								//add.Parameters.AddWithValue("@Address", address);
 								PushL("🗒 Дополнительные пожелания:");
-								await Send();
-								string additional = await AwaitText();
+								await Send(); 
+								additional = await AwaitText();
 								if (additional.Equals("/start"))
 								{
 									Start();
 								}
 								else
 								{
-									add.Parameters.AddWithValue("@Additional", additional);
+									//Идентификатор заказ-товары
+									var order_product_id = Guid.NewGuid();
+									
+									add.CommandText =
+										"INSERT INTO public.\"Orders\"(\"Customer_name\", \"Customer_number\", \"Receiver_name\", \"Receiver_number\", \"Address\", \"Description\", \"Datetime\", \"Order_products_id\", \"UserId\")";
+									add.CommandText += $" VALUES ( '{c_name}', '{c_name}', '{r_name}', '{r_number}', '{address}', '{additional}', '{DateTime.Now}', '{order_product_id.ToString()}',{ChatId});";
 									add.ExecuteNonQuery();
+									//add.Parameters.AddWithValue("@Additional", additional);
+									//Заполнение таблицы Order_products
+									NpgsqlConnection DB1 = new NpgsqlConnection(PostgresConnectionString);
+									NpgsqlConnection DB2 = new NpgsqlConnection(PostgresConnectionString);
+									NpgsqlConnection DB3 = new NpgsqlConnection(PostgresConnectionString);
+									DB3.Open();
+									NpgsqlCommand order_customer = DB3.CreateCommand();
+									order_customer.CommandText = $"INSERT INTO public.\"OrderCustomer\"(\"OrderId\", \"CustomerId\") VALUES ('{order_product_id.ToString()}', {Convert.ToInt32(ChatId)});";
+									order_customer.ExecuteNonQuery();
+									DB3.Close();
+									DB1.Open();
+									DB2.Open();
+									NpgsqlCommand read_Usercart = DB1.CreateCommand();
+									read_Usercart.CommandText = $"SELECT * FROM \"Cart\" WHERE \"UserId\" = {Convert.ToInt32(ChatId)}";
+									var reader_userCart = read_Usercart.ExecuteReader();
+									NpgsqlCommand products_order = DB2.CreateCommand();
+									while (reader_userCart.Read())
+									{
+										products_order.CommandText = $"INSERT INTO public.\"Order_products\"(\"Product_name\", \"Product_price\", \"OrderId\") VALUES ('{reader_userCart["Name"].ToString()}', CAST({reader_userCart["Price"].ToString()} as MONEY), '{order_product_id.ToString()}');";
+										products_order.ExecuteNonQuery();
+									}
+									
+									DB1.Close();
+									DB2.Close();
 									//Инлайн оформления заказа
 									InlineKeyboardMarkup back_menu = new(
 										new[]
@@ -1286,40 +1178,45 @@ namespace BotFFlowers
 									);
 									//Увед в приватный канал
 									string Notif_message = "";
-									SQLiteCommand read_notif = DB.CreateCommand();
-									read_notif.CommandText = $"SELECT * FROM data{ChatId.ToString()}";
-									SQLiteDataReader reader = read_notif.ExecuteReader();
+									DB3.Open();
+									NpgsqlCommand read_notif = DB3.CreateCommand();
+									read_notif.CommandText = $"SELECT  * FROM public.\"Orders\" WHERE \"Order_products_id\" = '{order_product_id.ToString()}'";
+									
+									var reader = read_notif.ExecuteReader();
 									while (reader.Read())
 									{
 										Notif_message +=
-											$"🟨 <b>Новый заказ! #{reader["Id"].ToString()}</b>\n===============\n<b>Заказчик:</b> {reader["C_name"].ToString()} \nНомер заказчика: {reader["C_number"].ToString()}\nТелега заказчика: @{Context.GetUsername()} \n===============\n<b>Получатель:</b> {reader["R_name"].ToString()} \nНомер получателя: {reader["R_number"].ToString()} \n===============\n<b>Адрес:</b> {reader["Address"].ToString()} \n===============\n<b>Дополнительно:</b> {reader["Additional"].ToString()} \n===============\n<b>Заказанные товары</b> 👇\n";
+											$"🟨 <b>Новый заказ! #{reader["Id"].ToString()}</b>\n===============\n<b>Заказчик:</b> {reader["Customer_name"].ToString()} \nНомер заказчика: {reader["Customer_number"].ToString()}\nТелега заказчика: @{Context.GetUsername()} \n===============\n<b>Получатель:</b> {reader["Receiver_name"].ToString()} \nНомер получателя: {reader["Receiver_number"].ToString()} \n===============\n<b>Адрес:</b> {reader["Address"].ToString()} \n===============\n<b>Дополнительно:</b> {reader["Description"].ToString()} \n===============\n<b>Заказанные товары</b> 👇\n";
 										await Client.SendTextMessageAsync(ChatId,
 											$"✅ <b>Заказ оформлен!</b>\nНомер заказа: #{reader["Id"].ToString()}\nВ ближайшее время с вами свяжется менеджер для подтверждения заказа и способа оплаты!",
 											ParseMode.Html, replyMarkup: back_menu);
 
 									}
-
-									SQLiteCommand read_cart = DB.CreateCommand();
-									read_cart.CommandText = $"SELECT * FROM cart{ChatId.ToString()}";
-									SQLiteDataReader reader_cart = read_cart.ExecuteReader();
-									int result_price = 0;
+									DB3.Close();
+									DB3.Open();
+									NpgsqlCommand read_cart = DB3.CreateCommand();
+									read_cart.CommandText = $"SELECT * FROM public.\"Order_products\" WHERE \"OrderId\" = '{order_product_id.ToString()}'";
+									var reader_cart = read_cart.ExecuteReader();
+									double result_price = 0;
 									while (reader_cart.Read())
 									{
 										Notif_message +=
-											$"⭐ Товар: {reader_cart["Name"].ToString()}  Стоимость: {reader_cart["Price"].ToString()}\n ";
-										string check = new string(reader_cart["Price"].ToString()
-											.Where(t => char.IsDigit(t)).ToArray());
-										int price = Convert.ToInt32(check);
-										result_price += price;
+											$"⭐ Товар: {reader_cart["Product_name"].ToString()}  Стоимость: {reader_cart["Product_price"].ToString()} ₽\n ";
+										//string check = new string(reader_cart["Product_price"].ToString()
+											//.Where(t => char.IsDigit(t)).ToArray());
+										//int price = Convert.ToInt32(check);
+										result_price += Convert.ToDouble(reader_cart["Product_price"]);
 									}
-
-									Notif_message += $"===============\n<b>Итоговая сумма</b>: {result_price} ₽";
+									DB3.Close();
+									Notif_message += $"===============\n<b>Итоговая сумма</b>: {result_price.ToString()} ₽";
 									//Фикс
 									await Notif.SendTextMessageAsync(chatId: notif_chatid, text: $"{Notif_message}",
 										Telegram.Bot.Types.Enums.ParseMode.Html);
-									SQLiteCommand clear_cart = DB.CreateCommand();
-									clear_cart.CommandText = $"DELETE FROM cart{ChatId.ToString()}";
+									DB3.Open();
+									NpgsqlCommand clear_cart = DB3.CreateCommand();
+									clear_cart.CommandText = $"DELETE FROM public.\"Cart\" WHERE \"UserId\" = {Convert.ToInt32(ChatId)}";
 									clear_cart.ExecuteNonQuery();
+									DB3.Close();
 									DB.Close();
 								}
 							}
@@ -1328,6 +1225,7 @@ namespace BotFFlowers
 				}
 			}
 			DB.Close();
+			
 		}
 		#endregion
 
@@ -1370,10 +1268,10 @@ namespace BotFFlowers
 			await Client.SendTextMessageAsync(ChatId,
 				"🛒 <b>Корзина:</b>\n❗ Доставка шаров, тортов и игрушек осуществляется только вместе с доставкой букета!\n❗ Для оформления заказа выберите зону(ы) доставки и заполните форму 😉\n",
 				Telegram.Bot.Types.Enums.ParseMode.Html);
-			SQLiteConnection check_connection = new SQLiteConnection("Data Source=DBFlowers.db;");
+			NpgsqlConnection check_connection = new NpgsqlConnection(PostgresConnectionString);
 			check_connection.Open();
-			SQLiteCommand check_command = check_connection.CreateCommand();
-			check_command.CommandText = $"SELECT count(rowid) FROM cart{ChatId.ToString()}";
+			NpgsqlCommand check_command = check_connection.CreateCommand();
+			check_command.CommandText = $"SELECT count(*) FROM \"Cart\" WHERE \"UserId\" = {Convert.ToInt32(ChatId)}";
 			check_command.ExecuteNonQuery();
 			int countRows = (int) (long) check_command.ExecuteScalar();
 			check_connection.Close();
@@ -1385,39 +1283,39 @@ namespace BotFFlowers
 			}
 			else
 			{
-				int result_price = 0;
-				SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
+				double result_price = 0;
+				NpgsqlConnection DB = new NpgsqlConnection(PostgresConnectionString);
 				DB.Open();
-				SQLiteCommand create = DB.CreateCommand();
-				create.CommandText = $"SELECT * FROM cart{ChatId.ToString()}";
-				SQLiteDataReader reader = create.ExecuteReader();
+				NpgsqlCommand create = DB.CreateCommand();
+				create.CommandText = $"SELECT * FROM \"Cart\" WHERE \"UserId\" = {Convert.ToInt32(ChatId)}";
+				var reader = create.ExecuteReader();
 				while (reader.Read())
 				{
 					InlineKeyboardMarkup delete_cart = new(
 						new[]
 						{
 							InlineKeyboardButton.WithCallbackData(text: "❌ Удалить товар",
-								callbackData: Q(DeleteAtId, reader["Id"].ToString())),
+								callbackData: Q(DeleteAtId, Convert.ToInt32(reader["Id"]))),
 						}
 
 					);
 					await Client.SendTextMessageAsync(ChatId,
-						$"⭐ {reader["Name"].ToString()} : {reader["Price"].ToString()}",
+						$"⭐ {reader["Name"].ToString()} : {reader["Price"].ToString()} ₽",
 						Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: delete_cart);
-					string check = new string(reader["Price"].ToString().Where(t => char.IsDigit(t)).ToArray());
-					int price = Convert.ToInt32(check);
-					result_price += price;
+					//string check = new string(reader["Price"].ToString().Where(t => char.IsDigit(t)).ToArray());
+					//double price = Convert.ToDouble(check);
+					result_price += Convert.ToDouble(reader["Price"]);;
 				}
 
 				DB.Close();
-				await Client.SendTextMessageAsync(ChatId, $"💰 Сумма заказа: {result_price} ₽",
+				await Client.SendTextMessageAsync(ChatId, $"💰 Сумма заказа: {result_price.ToString()} ₽",
 					Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: create_order);
 			}
 		}
 
 		//Удаление одного товара из корзины по ID
 		[Action]
-		public async Task DeleteAtId(string id)
+		public async Task DeleteAtId(int id)
 		{
 			InlineKeyboardMarkup redirect_basket = new(
 				new[]
@@ -1427,11 +1325,11 @@ namespace BotFFlowers
 				}
 
 			);
-			SQLiteConnection DB = new SQLiteConnection("Data Source=DBFlowers.db;");
+			NpgsqlConnection DB = new NpgsqlConnection(PostgresConnectionString);
 			DB.Open();
-			SQLiteCommand delID = DB.CreateCommand();
-			delID.CommandText = $"DELETE  FROM cart{ChatId.ToString()} WHERE Id = @id";
-			delID.Parameters.AddWithValue("@id", id);
+			NpgsqlCommand delID = DB.CreateCommand();
+			delID.CommandText = $"DELETE  FROM \"Cart\" WHERE \"Id\" = {id}";
+			//delID.Parameters.AddWithValue("@id", id);
 			delID.ExecuteNonQuery();
 			await Client.SendTextMessageAsync(ChatId, "✅ Товар удалён", Telegram.Bot.Types.Enums.ParseMode.Html,
 				replyMarkup: redirect_basket);
@@ -1472,7 +1370,130 @@ namespace BotFFlowers
 		}
 
 		#endregion
+		
+		//Администрование
 
+		#region AdminsAccess
+		
+		[Action]
+		public void Admin_Add()
+		{
+			InlineKeyboardMarkup refreh = new InlineKeyboardMarkup(
+
+				new InlineKeyboardButton[][]
+				{
+					new InlineKeyboardButton[]
+					{
+
+						InlineKeyboardButton.WithCallbackData(text: "✅ Добавить", callbackData: Q(AddAdmin)),
+					},
+					new InlineKeyboardButton[]
+					{
+						InlineKeyboardButton.WithCallbackData(text: "❌ Стоп. Назад", callbackData: Q(Start)),
+
+					}
+				}
+			);
+			Client.SendTextMessageAsync(ChatId, "Точно добавить администратора?", ParseMode.Html, replyMarkup: refreh);
+		}
+		[Action]
+		public async Task ShowAdmins()
+		{
+			string admin_message = "";
+			NpgsqlConnection DB = new NpgsqlConnection(PostgresConnectionString);
+			DB.Open();
+			NpgsqlCommand cmd = DB.CreateCommand();
+			cmd.CommandText = "SELECT * FROM public.\"AdminAccess\"";
+			var reader = cmd.ExecuteReader();
+			while (reader.Read())
+			{
+				admin_message += $"\n🌹 ID: {reader["Id"].ToString()}\n Администратор: {reader["Name"].ToString()}\n ChatId: {reader["ChatId"].ToString()}\n =============\n";
+			}
+			InlineKeyboardMarkup back_menu = new(
+				new[]
+				{
+					InlineKeyboardButton.WithCallbackData(text: "⏪ Меню",
+						callbackData: Q(Start)),
+				}
+			);
+			await Client.SendTextMessageAsync(ChatId,
+				admin_message,
+				ParseMode.Html, replyMarkup: back_menu);
+		}
+		[Action]
+		public async Task RemoveAdmin()
+		{
+			
+			NpgsqlConnection DB = new NpgsqlConnection(PostgresConnectionString);
+			DB.Open();
+			NpgsqlCommand cmd = DB.CreateCommand();
+			string admin_id = "";
+			PushL("🗒 Введите ID администратора для удаления:");
+			await Send(); 
+			admin_id = await AwaitText();
+			if (admin_id.Equals("/start"))
+			{
+				Start();
+			}
+			cmd.CommandText = $"DELETE FROM public.\"AdminAccess\" WHERE \"Id\" = {Convert.ToInt32(admin_id)}";
+			var reader = cmd.ExecuteNonQuery();
+			
+			InlineKeyboardMarkup back_menu = new(
+				new[]
+				{
+					InlineKeyboardButton.WithCallbackData(text: "⏪ Меню",
+						callbackData: Q(Start)),
+				}
+			);
+			await Client.SendTextMessageAsync(ChatId,
+				"✅ Администратор удалён!",
+				ParseMode.Html, replyMarkup: back_menu);
+		}
+		[Action]
+		public async Task AddAdmin()
+		{
+			
+			NpgsqlConnection DB = new NpgsqlConnection(PostgresConnectionString);
+			DB.Open();
+			NpgsqlCommand cmd = DB.CreateCommand();
+			string admin_Name = "";
+			string admin_ChatId = "";
+			PushL("🗒 Введите имя администратора:");
+			await Send(); 
+			admin_Name = await AwaitText();
+			if (admin_Name.Equals("/start"))
+			{
+				Start();
+			}
+			else
+			{
+				PushL("🗒 Введите ChatId администратора:");
+				await Send(); 
+				admin_ChatId = await AwaitText();
+				if (admin_ChatId.Equals("/start"))
+				{
+					Start();
+				}
+				else
+				{
+					cmd.CommandText = $"INSERT INTO public.\"AdminAccess\" (\"Name\",\"ChatId\") VALUES ('{admin_Name}','{admin_ChatId}')";
+					var reader = cmd.ExecuteNonQuery();
+			
+					InlineKeyboardMarkup back_menu = new(
+						new[]
+						{
+							InlineKeyboardButton.WithCallbackData(text: "⏪ Меню",
+								callbackData: Q(Start)),
+						}
+					);
+					await Client.SendTextMessageAsync(ChatId,
+						"✅ Администратор добавлен!",
+						ParseMode.Html, replyMarkup: back_menu);
+				}
+			}
+			
+		}
+		#endregion
 	}
 }
 
