@@ -26,7 +26,7 @@ namespace BotFFlowers
 		#region Constants
 		//Бот отправкм заказов в приватный канал
 		private static TelegramBotClient
-			Notif = new TelegramBotClient("");
+			Notif = new TelegramBotClient("5355673985:AAFi055Qt0RpnApk7eOwn1P_kLDmr1HZD_Y");
 		//Строка подключения к контейнеру
 		private static string PostgresConnectionString = "Server=localhost;Port=5432;Database=mydbname;User Id=app;Password=app;";
 
@@ -34,7 +34,7 @@ namespace BotFFlowers
 		// private static string admin_chatid = "387549112";
 		// private static string admin_chatid2 = "727043884";
 
-		private static string notif_chatid = "";
+		private static string notif_chatid = "-1001868442078";
 
 		//Парсинг
 		string baseurl = "https://flowerskamensk.ru/products/category/";
@@ -144,7 +144,7 @@ namespace BotFFlowers
 				RowButton("✅ Добавить товар", Q(CMS_ADD));
 				RowButton("❌ Удалить товар", Q(CMS_DELETE));
 				RowButton("📱 Изменить товар", Q(Edit_product));
-				RowButton("📄 Экспорт отчета в Excel");//ShowAdmins
+				//RowButton("📄 Экспорт отчета в Excel");
 				RowButton("💁💁 Показать администраторов",Q(ShowAdmins));
 				RowButton("✅💁 Добавление администратора",Q(Admin_Add));
 				RowButton("❌💁 Удаление администратора",Q(RemoveAdmin));
