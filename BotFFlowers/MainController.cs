@@ -26,15 +26,11 @@ namespace BotFFlowers
 		#region Constants
 		//Бот отправкм заказов в приватный канал
 		private static TelegramBotClient
-			Notif = new TelegramBotClient("5355673985:AAFi055Qt0RpnApk7eOwn1P_kLDmr1HZD_Y");
+			Notif = new TelegramBotClient("");
 		//Строка подключения к контейнеру
 		private static string PostgresConnectionString = "Server=localhost;Port=5432;Database=mydbname;User Id=app;Password=app;";
-
-		//Админ ChatID
-		// private static string admin_chatid = "387549112";
-		// private static string admin_chatid2 = "727043884";
-
-		private static string notif_chatid = "-1001868442078";
+		
+		private static string notif_chatid = "";
 
 		//Парсинг
 		string baseurl = "https://flowerskamensk.ru/products/category/";
@@ -144,7 +140,6 @@ namespace BotFFlowers
 				RowButton("✅ Добавить товар", Q(CMS_ADD));
 				RowButton("❌ Удалить товар", Q(CMS_DELETE));
 				RowButton("📱 Изменить товар", Q(Edit_product));
-				//RowButton("📄 Экспорт отчета в Excel");
 				RowButton("💁💁 Показать администраторов",Q(ShowAdmins));
 				RowButton("✅💁 Добавление администратора",Q(Admin_Add));
 				RowButton("❌💁 Удаление администратора",Q(RemoveAdmin));
@@ -1061,23 +1056,16 @@ namespace BotFFlowers
 		public async Task NotificateOrder()
 		{
 			NpgsqlConnection DB = new NpgsqlConnection(PostgresConnectionString);
-			
 			DB.Open();
-			
-			// NpgsqlCommand cleardata = DB.CreateCommand();
-			// cleardata.CommandText = $"DELETE FROM data{ChatId.ToString()}";
-			// cleardata.ExecuteNonQuery();
 			NpgsqlCommand add = DB.CreateCommand();
 			
-				
 			string c_name = "";
 			string c_number = "";
 			string r_name = "";
 			string r_number = "";
 			string address = "";
 			string additional = "";
-			//string id = random.Next(500000).ToString();
-			//add.Parameters.AddWithValue("@Id", id);
+			
 			PushL("Пожалуйста, заполните форму ниже 👇");
 			PushL("🙂 Ваше ФИО:");
 			await Send();
@@ -1088,7 +1076,7 @@ namespace BotFFlowers
 			}
 			else
 			{
-				//add.Parameters.AddWithValue("@C_name", c_name);
+				
 				PushL("📱 Ваш номер телефона:");
 				await Send();
 				 c_number = await AwaitText();
@@ -1098,7 +1086,7 @@ namespace BotFFlowers
 				}
 				else
 				{
-					//add.Parameters.AddWithValue("@C_number", c_number);
+					
 					PushL("🙂 ФИО получателя:");
 					await Send();
 					 r_name = await AwaitText();
@@ -1108,7 +1096,7 @@ namespace BotFFlowers
 					}
 					else
 					{
-						//add.Parameters.AddWithValue("@R_name", r_name);
+						
 						PushL("📱 Номер телефона получателя:");
 						await Send();
 						 r_number = await AwaitText();
@@ -1118,7 +1106,7 @@ namespace BotFFlowers
 						}
 						else
 						{
-							//add.Parameters.AddWithValue("@R_number", r_number);
+							
 							PushL("🏠 Адрес получателя:");
 							await Send(); address = await AwaitText();
 							if (address.Equals("/start"))
@@ -1127,7 +1115,7 @@ namespace BotFFlowers
 							}
 							else
 							{
-								//add.Parameters.AddWithValue("@Address", address);
+								
 								PushL("🗒 Дополнительные пожелания:");
 								await Send(); 
 								additional = await AwaitText();
@@ -1144,7 +1132,7 @@ namespace BotFFlowers
 										"INSERT INTO public.\"Orders\"(\"Customer_name\", \"Customer_number\", \"Receiver_name\", \"Receiver_number\", \"Address\", \"Description\", \"Datetime\", \"Order_products_id\", \"UserId\")";
 									add.CommandText += $" VALUES ( '{c_name}', '{c_name}', '{r_name}', '{r_number}', '{address}', '{additional}', '{DateTime.Now}', '{order_product_id.ToString()}',{ChatId});";
 									add.ExecuteNonQuery();
-									//add.Parameters.AddWithValue("@Additional", additional);
+									
 									//Заполнение таблицы Order_products
 									NpgsqlConnection DB1 = new NpgsqlConnection(PostgresConnectionString);
 									NpgsqlConnection DB2 = new NpgsqlConnection(PostgresConnectionString);
@@ -1202,9 +1190,7 @@ namespace BotFFlowers
 									{
 										Notif_message +=
 											$"⭐ Товар: {reader_cart["Product_name"].ToString()}  Стоимость: {reader_cart["Product_price"].ToString()} ₽\n ";
-										//string check = new string(reader_cart["Product_price"].ToString()
-											//.Where(t => char.IsDigit(t)).ToArray());
-										//int price = Convert.ToInt32(check);
+										
 										result_price += Convert.ToDouble(reader_cart["Product_price"]);
 									}
 									DB3.Close();
