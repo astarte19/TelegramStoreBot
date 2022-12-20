@@ -30,7 +30,7 @@ namespace BotFFlowers
 		//Строка подключения к контейнеру
 		private static string PostgresConnectionString = "Server=localhost;Port=5432;Database=mydbname;User Id=app;Password=app;";
 		
-		private static string notif_chatid = "";
+		private static string notif_chatid = "-1001868442078";
 
 		//Парсинг
 		string baseurl = "https://flowerskamensk.ru/products/category/";
@@ -116,7 +116,7 @@ namespace BotFFlowers
 		#region MainNavigation
 
 		[Action("/start", "Меню")]
-		public void Start()
+		public async Task Start()
 		{
 			NpgsqlConnection DB_Access = new NpgsqlConnection(PostgresConnectionString);
 			DB_Access.Open();
@@ -142,7 +142,8 @@ namespace BotFFlowers
 				RowButton("📱 Изменить товар", Q(Edit_product));
 				RowButton("💁💁 Показать администраторов",Q(ShowAdmins));
 				RowButton("✅💁 Добавление администратора",Q(Admin_Add));
-				RowButton("❌💁 Удаление администратора",Q(RemoveAdmin));
+				RowButton("❌💁 Удаление администратора",Q(RemoveAdmin));//FindOrders
+				
 				RowButton("🔄 Обновить товары", Q(RefreshItems));
 			}
 			else
@@ -1479,6 +1480,7 @@ namespace BotFFlowers
 			}
 			
 		}
+		
 		#endregion
 	}
 }
